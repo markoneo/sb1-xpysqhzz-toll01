@@ -53,3 +53,11 @@ The workflow "Start application" runs `npm run dev` which starts the Express ser
 - Ported Supabase Edge Functions to Express server routes
 - Updated frontend to fetch config from server API
 - Removed Supabase dependency
+- Added comprehensive mobile-friendly improvements:
+  - PWA meta tags (apple-mobile-web-app-capable, theme-color)
+  - Responsive layouts using Tailwind sm: breakpoints
+  - Vehicle cards stack vertically on mobile (grid-cols-1 sm:grid-cols-3)
+  - Touch-friendly buttons with active:scale-95 transitions
+  - Larger input touch targets (min-h-12)
+  - Compact stats display on mobile
+  - Pinch-to-zoom enabled for accessibility
