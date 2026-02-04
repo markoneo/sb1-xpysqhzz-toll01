@@ -6,7 +6,23 @@ declare global {
   }
 }
 
-export function loadGoogleMapsAPI(): Promise<void> {
+let cachedApiKey: string | null = null;
+
+async function fetchApiKey(): Promise<string> {
+  if (cachedApiKey) return cachedApiKey;
+  
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    cachedApiKey = config.googleMapsApiKey || '';
+    return cachedApiKey;
+  } catch (error) {
+    console.error('Failed to fetch config:', error);
+    return '';
+  }
+}
+
+export async function loadGoogleMapsAPI(): Promise<void> {
   if (typeof window.google !== 'undefined' && window.google.maps) {
     console.log('Google Maps already loaded');
     return Promise.resolve();
@@ -17,14 +33,15 @@ export function loadGoogleMapsAPI(): Promise<void> {
     return window.googleMapsLoading;
   }
 
-  window.googleMapsLoading = new Promise((resolve, reject) => {
+  window.googleMapsLoading = new Promise(async (resolve, reject) => {
     const script = document.createElement('script');
-    const apiKey = window.GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    
+    const apiKey = window.GOOGLE_MAPS_API_KEY || await fetchApiKey();
 
     console.log('API Key found:', apiKey ? 'Yes (length: ' + apiKey.length + ')' : 'No');
 
     if (!apiKey) {
-      const error = new Error('Google Maps API key is not configured in environment variables');
+      const error = new Error('Google Maps API key is not configured. Please set GOOGLE_MAPS_API_KEY in your environment.');
       console.error(error);
       reject(error);
       return;
@@ -37,10 +54,10 @@ export function loadGoogleMapsAPI(): Promise<void> {
     script.async = true;
     script.defer = true;
 
-    (window as any).initGoogleMaps = () => {
+    (window as unknown as Record<string, unknown>).initGoogleMaps = () => {
       console.log('Google Maps initialized successfully');
       resolve();
-      delete (window as any).initGoogleMaps;
+      delete (window as unknown as Record<string, unknown>).initGoogleMaps;
     };
 
     script.onerror = (error) => {

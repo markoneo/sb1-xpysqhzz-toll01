@@ -1,6 +1,3 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
 interface TunnelDetectionRequest {
   origin: string;
   destination: string;
@@ -16,16 +13,10 @@ interface TunnelDetectionResponse {
 export async function detectTunnelsWithAI(
   request: TunnelDetectionRequest
 ): Promise<string[]> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn('Supabase not configured, skipping AI tunnel detection');
-    return [];
-  }
-
   try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/detect-tunnels`, {
+    const response = await fetch('/api/detect-tunnels', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
