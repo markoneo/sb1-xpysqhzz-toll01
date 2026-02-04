@@ -1,10 +1,33 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, X } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { RoutePreviewMap } from './RoutePreviewMap';
 import { SpecialTollSelector } from './SpecialTollSelector';
 import { SelectedSpecialToll } from '../types';
 import { detectTunnelsWithAI } from '../services/tunnelDetectionService';
+
+const countryNameToCode: Record<string, string> = {
+  'Austria': 'AT', 'Belgium': 'BE', 'Bulgaria': 'BG', 'Croatia': 'HR',
+  'Czech Republic': 'CZ', 'Czechia': 'CZ', 'France': 'FR', 'Germany': 'DE',
+  'Greece': 'GR', 'Hungary': 'HU', 'Italy': 'IT', 'Italia': 'IT',
+  'Netherlands': 'NL', 'Poland': 'PL', 'Portugal': 'PT', 'Romania': 'RO',
+  'Serbia': 'RS', 'Slovakia': 'SK', 'Slovenia': 'SI', 'Slovenija': 'SI',
+  'Spain': 'ES', 'Switzerland': 'CH', 'Schweiz': 'CH', 'Suisse': 'CH',
+  'Svizzera': 'CH', 'Deutschland': 'DE', 'Österreich': 'AT'
+};
+
+function extractCountryFromAddress(address: string): string | null {
+  const parts = address.split(',').map(p => p.trim());
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const part = parts[i].replace(/\d+/g, '').trim();
+    for (const [name, code] of Object.entries(countryNameToCode)) {
+      if (part.toLowerCase().includes(name.toLowerCase())) {
+        return code;
+      }
+    }
+  }
+  return null;
+}
 
 interface RouteStepProps {
   startAddress: string;
@@ -29,7 +52,36 @@ export function RouteStep({
 }: RouteStepProps) {
   const [aiDetectedTunnelIds, setAiDetectedTunnelIds] = useState<string[]>([]);
   const [isDetectingTunnels, setIsDetectingTunnels] = useState(false);
+  const [routeCountries, setRouteCountries] = useState<string[]>([]);
   const lastDetectionKey = useRef<string>('');
+
+  const extractCountriesFromRoute = useCallback((result: google.maps.DirectionsResult | null) => {
+    if (!result || !result.routes[0]) {
+      setRouteCountries([]);
+      return;
+    }
+
+    const countries = new Set<string>();
+    const route = result.routes[0];
+    
+    for (const leg of route.legs) {
+      if (leg.start_address) {
+        const code = extractCountryFromAddress(leg.start_address);
+        if (code) countries.add(code);
+      }
+      if (leg.end_address) {
+        const code = extractCountryFromAddress(leg.end_address);
+        if (code) countries.add(code);
+      }
+    }
+
+    setRouteCountries(Array.from(countries));
+  }, []);
+
+  const handleRouteCalculated = useCallback((result: google.maps.DirectionsResult | null) => {
+    extractCountriesFromRoute(result);
+    onRoutePreviewCalculated?.(result);
+  }, [extractCountriesFromRoute, onRoutePreviewCalculated]);
 
   useEffect(() => {
     if (!startAddress || !endAddress) {
@@ -37,7 +89,7 @@ export function RouteStep({
       return;
     }
 
-    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}`;
+    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}|${routeCountries.join(',')}`;
     if (detectionKey === lastDetectionKey.current) {
       return;
     }
@@ -49,6 +101,7 @@ export function RouteStep({
           origin: startAddress,
           destination: endAddress,
           waypoints: waypointAddresses.filter(Boolean),
+          countries: routeCountries,
         });
         lastDetectionKey.current = detectionKey;
         setAiDetectedTunnelIds(tunnelIds);
@@ -61,7 +114,7 @@ export function RouteStep({
 
     const timeoutId = setTimeout(detectTunnels, 1000);
     return () => clearTimeout(timeoutId);
-  }, [startAddress, endAddress, waypointAddresses]);
+  }, [startAddress, endAddress, waypointAddresses, routeCountries]);
 
   const addWaypoint = () => {
     onChange('waypointAddresses', [...waypointAddresses, '']);
@@ -135,7 +188,7 @@ export function RouteStep({
             startAddress={startAddress}
             endAddress={endAddress}
             waypointAddresses={waypointAddresses}
-            onRouteCalculated={onRoutePreviewCalculated}
+            onRouteCalculated={handleRouteCalculated}
           />
         </div>
       </div>
