@@ -1,4 +1,5 @@
-import { Euro, Route, Clock, Info, ArrowLeft, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { Euro, Route, Clock, Info, ArrowLeft, MapPin, Share2, Check } from 'lucide-react';
 import { CalculationResult, TripData } from '../types';
 import { RouteMap } from './RouteMap';
 
@@ -10,19 +11,120 @@ interface ResultsViewProps {
 
 export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
   const isReturnTrip = tripData.tripType === 'return';
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'shared'>('idle');
+
+  const generateShareText = () => {
+    const tripType = isReturnTrip ? 'Round trip' : 'One-way';
+    const hours = Math.floor(result.estimatedDrivingTime);
+    const minutes = Math.round((result.estimatedDrivingTime % 1) * 60);
+    
+    let text = `🚗 European Road Trip Cost Estimate\n\n`;
+    text += `📍 Route: ${tripData.startAddress} → ${tripData.endAddress}\n`;
+    if (tripData.waypointAddresses && tripData.waypointAddresses.length > 0) {
+      text += `📍 Via: ${tripData.waypointAddresses.join(', ')}\n`;
+    }
+    text += `🔄 Trip type: ${tripType}\n`;
+    text += `📏 Distance: ${result.totalDistance} km\n`;
+    text += `⏱️ Driving time: ${hours}h ${minutes}m\n\n`;
+    text += `💶 Total Cost: €${result.totalCost.toFixed(2)}\n\n`;
+    text += `📊 Breakdown by Country:\n`;
+    
+    result.countryCosts.forEach((country) => {
+      const countryTotal = isReturnTrip 
+        ? (country.tollCost * 2) + country.vignetteCost + (country.specialTollsCost * 2)
+        : country.tollCost + country.vignetteCost + country.specialTollsCost;
+      
+      text += `${country.flag} ${country.countryName}: €${countryTotal.toFixed(2)}\n`;
+      
+      if (country.tollCost > 0) {
+        text += `   • Tolls: €${(isReturnTrip ? country.tollCost * 2 : country.tollCost).toFixed(2)}\n`;
+      }
+      if (country.vignetteCost > 0) {
+        text += `   • Vignette (${country.vignetteOption}): €${country.vignetteCost.toFixed(2)}\n`;
+      }
+      if (country.specialTollsCost > 0) {
+        const specialTotal = isReturnTrip ? country.specialTollsCost * 2 : country.specialTollsCost;
+        text += `   • Special tolls: €${specialTotal.toFixed(2)}\n`;
+      }
+    });
+    
+    text += `\n⚠️ Prices are estimates. Verify with official sources before travel.`;
+    text += `\n\nCalculated with European Road Trip Cost Calculator`;
+    
+    return text;
+  };
+
+  const handleShare = async () => {
+    const shareText = generateShareText();
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'European Road Trip Cost Estimate',
+          text: shareText,
+        });
+        setShareStatus('shared');
+        setTimeout(() => setShareStatus('idle'), 2000);
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          await copyToClipboard(shareText);
+        }
+      }
+    } else {
+      await copyToClipboard(shareText);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareStatus('copied');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Cost Estimate</h2>
-        <button
-          onClick={onBack}
-          className="px-3 sm:px-4 py-2 rounded-xl border-2 border-gray-300 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-1.5 sm:gap-2 transition-all duration-200 active:scale-95 text-sm sm:text-base"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShare}
+            className={`px-3 sm:px-4 py-2 rounded-xl border-2 flex items-center gap-1.5 sm:gap-2 transition-all duration-200 active:scale-95 text-sm sm:text-base ${
+              shareStatus === 'copied' || shareStatus === 'shared'
+                ? 'border-green-500 bg-green-50 text-green-700'
+                : 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200'
+            }`}
+            data-testid="button-share"
+          >
+            {shareStatus === 'copied' ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="hidden sm:inline">Copied!</span>
+              </>
+            ) : shareStatus === 'shared' ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="hidden sm:inline">Shared!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Share</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={onBack}
+            className="px-3 sm:px-4 py-2 rounded-xl border-2 border-gray-300 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-1.5 sm:gap-2 transition-all duration-200 active:scale-95 text-sm sm:text-base"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        </div>
       </div>
 
       <div className="p-5 sm:p-8 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200">
