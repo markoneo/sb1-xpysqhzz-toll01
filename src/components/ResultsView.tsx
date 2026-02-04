@@ -10,8 +10,6 @@ interface ResultsViewProps {
 
 export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
   const isReturnTrip = tripData.tripType === 'return';
-  const displayDistance = isReturnTrip ? result.totalDistance * 2 : result.totalDistance;
-  const displayDrivingTime = isReturnTrip ? result.estimatedDrivingTime * 2 : result.estimatedDrivingTime;
 
   return (
     <div className="space-y-8">
@@ -44,10 +42,7 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
             <Route className="w-5 h-5" />
             <span className="text-sm font-medium">Total Distance</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900" data-testid="text-total-distance">{Math.round(displayDistance)} km</div>
-          {isReturnTrip && (
-            <div className="text-xs text-gray-500 mt-1">{result.totalDistance} km each way</div>
-          )}
+          <div className="text-3xl font-bold text-gray-900" data-testid="text-total-distance">{result.totalDistance} km</div>
         </div>
 
         <div className="p-6 rounded-xl bg-gray-50 border-2 border-gray-200">
@@ -56,13 +51,8 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
             <span className="text-sm font-medium">Estimated Driving</span>
           </div>
           <div className="text-3xl font-bold text-gray-900" data-testid="text-driving-time">
-            {Math.floor(displayDrivingTime)}h {Math.round((displayDrivingTime % 1) * 60)}m
+            {Math.floor(result.estimatedDrivingTime)}h {Math.round((result.estimatedDrivingTime % 1) * 60)}m
           </div>
-          {isReturnTrip && (
-            <div className="text-xs text-gray-500 mt-1">
-              {Math.floor(result.estimatedDrivingTime)}h {Math.round((result.estimatedDrivingTime % 1) * 60)}m each way
-            </div>
-          )}
         </div>
 
         <div className="p-6 rounded-xl bg-gray-50 border-2 border-gray-200">
@@ -83,8 +73,8 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Cost Breakdown by Country</h3>
         <div className="space-y-3">
           {result.countryCosts.map((country) => {
-            const countryDisplayDistance = isReturnTrip ? country.estimatedDistance * 2 : country.estimatedDistance;
             const countryTotalCost = country.tollCost + country.vignetteCost + country.specialTollsCost;
+            const oneWayTollCost = isReturnTrip ? country.tollCost / 2 : country.tollCost;
             
             return (
             <div
@@ -97,10 +87,7 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
                   <span className="text-3xl">{country.flag}</span>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">{country.countryName}</h4>
-                    <p className="text-sm text-gray-500">
-                      {Math.round(countryDisplayDistance)} km
-                      {isReturnTrip && <span className="text-xs text-gray-400 ml-1">({country.estimatedDistance} km each way)</span>}
-                    </p>
+                    <p className="text-sm text-gray-500">{country.estimatedDistance} km</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -111,7 +98,19 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-3">
-                {country.tollCost > 0 && (
+                {country.tollCost > 0 && isReturnTrip && (
+                  <>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                      <span className="text-sm text-gray-600">Distance Toll (outbound)</span>
+                      <span className="font-semibold text-gray-900">{oneWayTollCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                      <span className="text-sm text-gray-600">Distance Toll (return)</span>
+                      <span className="font-semibold text-gray-900">{oneWayTollCost.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                {country.tollCost > 0 && !isReturnTrip && (
                   <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                     <span className="text-sm text-gray-600">Distance Toll</span>
                     <span className="font-semibold text-gray-900">{country.tollCost.toFixed(2)}</span>
