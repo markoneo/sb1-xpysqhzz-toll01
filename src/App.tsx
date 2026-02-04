@@ -160,11 +160,11 @@ function App() {
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900">
-              EU Toll Calculator
+              European Road Trip Cost Calculator
             </h1>
           </div>
           <p className="text-sm sm:text-lg text-gray-600 px-2">
-            Estimate toll and vignette costs for your European road trip
+            Tolls • Vignettes • Tunnels
           </p>
         </div>
 
