@@ -163,8 +163,8 @@ function App() {
               European Road Trip Cost Calculator
             </h1>
           </div>
-          <p className="text-sm sm:text-lg text-gray-600 px-2">
-            Tolls • Vignettes • Tunnels
+          <p className="text-sm sm:text-base text-gray-600 px-2 max-w-2xl mx-auto">
+            Calculate your driving costs across Europe. Get estimates for motorway tolls, country vignettes and tunnel fees in Austria, Switzerland, Italy, France, Slovenia and more.
           </p>
         </div>
 
