@@ -154,37 +154,37 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Calculator className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 safe-top">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-12">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900">
               EU Toll Calculator
             </h1>
           </div>
-          <p className="text-lg text-gray-600">
+          <p className="text-sm sm:text-lg text-gray-600 px-2">
             Estimate toll and vignette costs for your European road trip
           </p>
         </div>
 
         {currentStep !== 'results' && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center justify-between max-w-md sm:max-w-2xl mx-auto px-2">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${
+                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg transition-all duration-300 ${
                         currentStepIndex >= index
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
                           : 'bg-gray-200 text-gray-400'
                       }`}
                     >
                       {step.number}
                     </div>
                     <div
-                      className={`mt-2 text-sm font-medium ${
+                      className={`mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium transition-colors duration-300 ${
                         currentStepIndex >= index ? 'text-blue-600' : 'text-gray-400'
                       }`}
                     >
@@ -193,7 +193,7 @@ function App() {
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-1 flex-1 mx-2 transition-all ${
+                      className={`h-1 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-500 ${
                         currentStepIndex > index ? 'bg-blue-600' : 'bg-gray-200'
                       }`}
                     />
@@ -204,7 +204,7 @@ function App() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 md:p-12 transition-all duration-300">
           {currentStep === 'vehicle' && (
             <VehicleStep
               vehicleType={tripData.vehicleType}
@@ -241,39 +241,50 @@ function App() {
           )}
 
           {currentStep !== 'results' && (
-            <div className="flex items-center justify-between mt-8 pt-8 border-t-2 border-gray-100">
+            <div className="flex items-center justify-between mt-6 sm:mt-8 pt-6 sm:pt-8 border-t-2 border-gray-100 gap-3">
               <button
                 onClick={handleBack}
                 disabled={isFirstStep}
-                className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
                   isFirstStep
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
                 }`}
+                data-testid="button-back-step"
               >
                 <ChevronLeft className="w-5 h-5" />
-                Back
+                <span className="hidden sm:inline">Back</span>
               </button>
 
               <button
                 onClick={handleNext}
                 disabled={!canProceed() || isCalculating}
-                className={`px-8 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
                   canProceed() && !isCalculating
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-lg shadow-blue-200'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
+                data-testid="button-next-step"
               >
-                {isCalculating ? 'Calculating Route...' : isLastStep ? 'Calculate' : 'Next'}
-                {!isCalculating && <ChevronRight className="w-5 h-5" />}
+                {isCalculating ? (
+                  <>
+                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span className="hidden sm:inline">Calculating...</span>
+                  </>
+                ) : (
+                  <>
+                    {isLastStep ? 'Calculate' : 'Next'}
+                    <ChevronRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           )}
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500 px-4 pb-4 safe-bottom">
           <p>
-            Built for European road travelers • Data updated 2026 • No registration required
+            Built for European road travelers • Data updated 2026
           </p>
         </div>
       </div>

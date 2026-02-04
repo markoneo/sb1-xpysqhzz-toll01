@@ -132,12 +132,12 @@ export function RouteStep({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Route Details</h2>
-        <p className="text-gray-600 mb-6">Enter your start and end addresses</p>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">Route Details</h2>
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Enter your start and end addresses</p>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <AddressAutocomplete
             value={startAddress}
             onChange={(value) => onChange('startAddress', value)}
@@ -170,10 +170,12 @@ export function RouteStep({
 
           <button
             onClick={addWaypoint}
-            className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
+            className="w-full px-4 py-3.5 sm:py-3 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-all duration-200 flex items-center justify-center gap-2 active:scale-98 text-sm sm:text-base"
+            data-testid="button-add-waypoint"
           >
             <Plus className="w-5 h-5" />
-            Add Waypoint (Optional)
+            <span className="hidden sm:inline">Add Waypoint (Optional)</span>
+            <span className="sm:hidden">Add Stop</span>
           </button>
 
           <AddressAutocomplete
@@ -194,32 +196,34 @@ export function RouteStep({
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Trip Type</h2>
-        <p className="text-gray-600 mb-6">Will you be returning?</p>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">Trip Type</h2>
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Will you be returning?</p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <button
             onClick={() => onChange('tripType', 'one-way')}
-            className={`p-6 rounded-xl border-2 transition-all ${
+            className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 active:scale-95 ${
               tripType === 'one-way'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-blue-500 bg-blue-50 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 active:bg-gray-50'
             }`}
+            data-testid="button-trip-oneway"
           >
-            <div className="text-lg font-medium text-gray-900">One-Way</div>
-            <div className="text-sm text-gray-500 mt-1">Single journey</div>
+            <div className="text-base sm:text-lg font-medium text-gray-900">One-Way</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Single journey</div>
           </button>
 
           <button
             onClick={() => onChange('tripType', 'return')}
-            className={`p-6 rounded-xl border-2 transition-all ${
+            className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 active:scale-95 ${
               tripType === 'return'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-blue-500 bg-blue-50 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 active:bg-gray-50'
             }`}
+            data-testid="button-trip-return"
           >
-            <div className="text-lg font-medium text-gray-900">Return</div>
-            <div className="text-sm text-gray-500 mt-1">Round trip</div>
+            <div className="text-base sm:text-lg font-medium text-gray-900">Return</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Round trip</div>
           </button>
         </div>
       </div>
