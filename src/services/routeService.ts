@@ -87,16 +87,19 @@ export async function calculateRoute(
             let countryDistances: CountryDistance[] = [];
 
             try {
-              countryDistances = await fallbackCountryDetection(route, totalDistanceKm);
+              console.log('Attempting accurate polyline-based country detection...');
+              countryDistances = await detectCountriesAlongRoute(route, totalDistanceKm);
+              console.log('Polyline detection result:', countryDistances);
             } catch (e) {
-              console.error('Fallback country detection failed:', e);
+              console.error('Route country detection failed:', e);
             }
 
             if (countryDistances.length === 0) {
+              console.log('Polyline detection failed, using fallback...');
               try {
-                countryDistances = await detectCountriesAlongRoute(route, totalDistanceKm);
+                countryDistances = await fallbackCountryDetection(route, totalDistanceKm);
               } catch (e) {
-                console.error('Route country detection failed:', e);
+                console.error('Fallback country detection failed:', e);
               }
             }
 
@@ -181,7 +184,7 @@ async function detectCountriesAlongRoute(
     pointDistances.push(pointDistances[i - 1] + segmentDist);
   }
 
-  const numSamples = Math.min(15, Math.max(5, Math.floor(totalDistanceKm / 25)));
+  const numSamples = Math.min(30, Math.max(10, Math.floor(totalDistanceKm / 15)));
   const sampleIndices: number[] = [];
   const totalPathDistance = pointDistances[pointDistances.length - 1] || totalDistanceKm;
 
