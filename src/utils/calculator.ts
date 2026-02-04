@@ -13,7 +13,7 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
   const durationMinutes = useRouteData ? tripData.routeData!.totalDuration : 0;
   const hours = Math.floor(durationMinutes / 60);
   const minutes = Math.round(durationMinutes % 60);
-  const estimatedDrivingTime = hours + (minutes / 60);
+  let estimatedDrivingTime = hours + (minutes / 60);
 
   const ownedVignettes = tripData.ownedVignettes || [];
   const selectedSpecialTolls = tripData.selectedSpecialTolls || [];
@@ -85,6 +85,7 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
     const oneWaySpecialTolls = countryCosts.reduce((sum, c) => sum + c.specialTollsCost, 0);
     totalCost = totalCost + oneWayTollCosts + oneWaySpecialTolls;
     totalDistance *= 2;
+    estimatedDrivingTime *= 2;
   }
 
   return {
