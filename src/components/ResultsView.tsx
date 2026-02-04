@@ -9,6 +9,10 @@ interface ResultsViewProps {
 }
 
 export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
+  const isReturnTrip = tripData.tripType === 'return';
+  const displayDistance = isReturnTrip ? result.totalDistance * 2 : result.totalDistance;
+  const displayDrivingTime = isReturnTrip ? result.estimatedDrivingTime * 2 : result.estimatedDrivingTime;
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -16,6 +20,7 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
         <button
           onClick={onBack}
           className="px-4 py-2 rounded-lg border-2 border-gray-300 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+          data-testid="button-back"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -27,9 +32,9 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
           <Euro className="w-6 h-6" />
           <span className="text-lg font-medium">Total Estimated Cost</span>
         </div>
-        <div className="text-5xl font-bold mb-2">€{result.totalCost.toFixed(2)}</div>
+        <div className="text-5xl font-bold mb-2" data-testid="text-total-cost">€{result.totalCost.toFixed(2)}</div>
         <div className="text-blue-100">
-          {tripData.tripType === 'return' ? 'Round trip' : 'One-way'}
+          {isReturnTrip ? 'Round trip' : 'One-way'}
         </div>
       </div>
 
@@ -39,7 +44,10 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
             <Route className="w-5 h-5" />
             <span className="text-sm font-medium">Total Distance</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{result.totalDistance} km</div>
+          <div className="text-3xl font-bold text-gray-900" data-testid="text-total-distance">{Math.round(displayDistance)} km</div>
+          {isReturnTrip && (
+            <div className="text-xs text-gray-500 mt-1">{result.totalDistance} km each way</div>
+          )}
         </div>
 
         <div className="p-6 rounded-xl bg-gray-50 border-2 border-gray-200">
@@ -47,9 +55,14 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
             <Clock className="w-5 h-5" />
             <span className="text-sm font-medium">Estimated Driving</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">
-            {Math.floor(result.estimatedDrivingTime)}h {Math.round((result.estimatedDrivingTime % 1) * 60)}m
+          <div className="text-3xl font-bold text-gray-900" data-testid="text-driving-time">
+            {Math.floor(displayDrivingTime)}h {Math.round((displayDrivingTime % 1) * 60)}m
           </div>
+          {isReturnTrip && (
+            <div className="text-xs text-gray-500 mt-1">
+              {Math.floor(result.estimatedDrivingTime)}h {Math.round((result.estimatedDrivingTime % 1) * 60)}m each way
+            </div>
+          )}
         </div>
 
         <div className="p-6 rounded-xl bg-gray-50 border-2 border-gray-200">
@@ -57,7 +70,7 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
             <MapPin className="w-5 h-5" />
             <span className="text-sm font-medium">Countries</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{result.countryCosts.length}</div>
+          <div className="text-3xl font-bold text-gray-900" data-testid="text-countries-count">{result.countryCosts.length}</div>
         </div>
       </div>
 
@@ -69,22 +82,30 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
       <div>
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Cost Breakdown by Country</h3>
         <div className="space-y-3">
-          {result.countryCosts.map((country) => (
+          {result.countryCosts.map((country) => {
+            const countryDisplayDistance = isReturnTrip ? country.estimatedDistance * 2 : country.estimatedDistance;
+            const countryTotalCost = country.tollCost + country.vignetteCost + country.specialTollsCost;
+            
+            return (
             <div
               key={country.countryCode}
               className="p-6 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors bg-white"
+              data-testid={`card-country-${country.countryCode}`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{country.flag}</span>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">{country.countryName}</h4>
-                    <p className="text-sm text-gray-500">{country.estimatedDistance} km</p>
+                    <p className="text-sm text-gray-500">
+                      {Math.round(countryDisplayDistance)} km
+                      {isReturnTrip && <span className="text-xs text-gray-400 ml-1">({country.estimatedDistance} km each way)</span>}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-gray-900">
-                    {(country.tollCost + country.vignetteCost + country.specialTollsCost).toFixed(2)}
+                    {countryTotalCost.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -135,7 +156,8 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
