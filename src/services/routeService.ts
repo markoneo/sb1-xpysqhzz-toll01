@@ -147,6 +147,7 @@ async function detectCountriesAlongRoute(
 
       if (polylineString) {
         allPoints = google.maps.geometry.encoding.decodePath(polylineString);
+        console.log(`Decoded ${allPoints.length} points from overview polyline`);
       }
     } catch (e) {
       console.error('Failed to decode polyline:', e);
@@ -154,6 +155,7 @@ async function detectCountriesAlongRoute(
   }
 
   if (allPoints.length === 0) {
+    console.log('Overview polyline empty, trying step polylines...');
     for (const leg of route.legs) {
       for (const step of leg.steps) {
         if (step.path && step.path.length > 0) {
@@ -168,6 +170,7 @@ async function detectCountriesAlongRoute(
         }
       }
     }
+    console.log(`Decoded ${allPoints.length} points from step polylines`);
   }
 
   if (allPoints.length === 0) {
@@ -184,10 +187,13 @@ async function detectCountriesAlongRoute(
     pointDistances.push(pointDistances[i - 1] + segmentDist);
   }
 
-  const numSamples = Math.min(30, Math.max(10, Math.floor(totalDistanceKm / 15)));
-  const sampleIndices: number[] = [];
   const totalPathDistance = pointDistances[pointDistances.length - 1] || totalDistanceKm;
+  console.log(`Total path distance from polyline: ${totalPathDistance.toFixed(1)} km`);
 
+  const numSamples = Math.min(50, Math.max(15, Math.floor(totalDistanceKm / 10)));
+  console.log(`Using ${numSamples} sample points for country detection`);
+  
+  const sampleIndices: number[] = [];
   for (let i = 0; i < numSamples; i++) {
     const targetDistance = (totalPathDistance * i) / (numSamples - 1);
     let closestIndex = 0;
@@ -206,6 +212,8 @@ async function detectCountriesAlongRoute(
     }
   }
 
+  console.log(`Sampling ${sampleIndices.length} unique points along route`);
+
   const sampledCountries: Array<{ countryCode: string; distanceKm: number }> = [];
 
   for (const idx of sampleIndices) {
@@ -216,13 +224,18 @@ async function detectCountriesAlongRoute(
       const countryCode = await reverseGeocodeToCountry(geocoder, point);
       if (countryCode && countryRules[countryCode]) {
         sampledCountries.push({ countryCode, distanceKm });
+        console.log(`Point at ${distanceKm.toFixed(1)}km: ${countryCode}`);
+      } else if (countryCode) {
+        console.log(`Point at ${distanceKm.toFixed(1)}km: ${countryCode} (not in country rules)`);
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error('Geocoding error at point:', error);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
+
+  console.log(`Successfully geocoded ${sampledCountries.length} points`);
 
   if (sampledCountries.length === 0) {
     return [];
@@ -240,6 +253,7 @@ async function detectCountriesAlongRoute(
         startKm: segmentStart,
         endKm: boundaryKm
       });
+      console.log(`Border detected at ~${boundaryKm.toFixed(1)}km: ${currentCountry} -> ${sampledCountries[i].countryCode}`);
       segmentStart = boundaryKm;
       currentCountry = sampledCountries[i].countryCode;
     }
@@ -268,10 +282,9 @@ async function detectCountriesAlongRoute(
   }
 
   for (const countryCode of orderedCountries) {
-    result.push({
-      countryCode,
-      distance: Math.round((countryDistanceMap.get(countryCode) || 0) * 10) / 10
-    });
+    const distance = Math.round((countryDistanceMap.get(countryCode) || 0) * 10) / 10;
+    result.push({ countryCode, distance });
+    console.log(`Country ${countryCode}: ${distance} km`);
   }
 
   return result;
