@@ -73,8 +73,13 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Cost Breakdown by Country</h3>
         <div className="space-y-3">
           {result.countryCosts.map((country) => {
-            const countryTotalCost = country.tollCost + country.vignetteCost + country.specialTollsCost;
-            const oneWayTollCost = isReturnTrip ? country.tollCost / 2 : country.tollCost;
+            // Backend stores one-way toll values, but totalCost includes doubled tolls for return trips
+            // So country.tollCost is already the one-way value
+            const oneWayTollCost = country.tollCost;
+            // For return trips, the country total should include doubled toll and special tolls
+            const countryTotalCost = isReturnTrip 
+              ? (country.tollCost * 2) + country.vignetteCost + (country.specialTollsCost * 2)
+              : country.tollCost + country.vignetteCost + country.specialTollsCost;
             
             return (
             <div
@@ -134,10 +139,23 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
                 )}
 
                 {country.specialTollsSelected.map((toll) => (
-                  <div key={toll.name} className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200">
-                    <span className="text-sm text-amber-900 truncate pr-2">{toll.name}</span>
-                    <span className="font-semibold text-amber-700">{toll.price.toFixed(2)}</span>
-                  </div>
+                  isReturnTrip ? (
+                    <div key={toll.name} className="col-span-2 grid grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200">
+                        <span className="text-sm text-amber-900 truncate pr-2">{toll.name} (outbound)</span>
+                        <span className="font-semibold text-amber-700">{toll.price.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200">
+                        <span className="text-sm text-amber-900 truncate pr-2">{toll.name} (return)</span>
+                        <span className="font-semibold text-amber-700">{toll.price.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={toll.name} className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200">
+                      <span className="text-sm text-amber-900 truncate pr-2">{toll.name}</span>
+                      <span className="font-semibold text-amber-700">{toll.price.toFixed(2)}</span>
+                    </div>
+                  )
                 ))}
 
                 {country.tollCost === 0 && country.vignetteCost === 0 && !country.vignetteOwned && country.specialTollsCost === 0 && (
