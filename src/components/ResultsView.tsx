@@ -50,6 +50,7 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
     
     text += `\n⚠️ Prices are estimates. Verify with official sources before travel.`;
     text += `\n\nCalculated with European Road Trip Cost Calculator`;
+    text += `\n🌐 https://tollcalculator.eu`;
     
     return text;
   };
