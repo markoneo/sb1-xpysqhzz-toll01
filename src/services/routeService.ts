@@ -16,7 +16,7 @@ export interface RouteData {
   directionsResult?: google.maps.DirectionsResult;
 }
 
-const ALL_HIGHWAY_PATTERNS: RegExp[] = [
+const HIGHWAY_ENTRY_PATTERNS: RegExp[] = [
   /\bA\d+\b/,
   /\bE\d+\b/,
   /\bAP-?\d+\b/,
@@ -29,13 +29,35 @@ const ALL_HIGHWAY_PATTERNS: RegExp[] = [
   /\bMotorway\b/i,
   /\bHighway\b/i,
   /\bEgnatia\b/i,
-  /\bTake the exit\b/i,
-  /\bMerge onto\b/i
+  /\bMerge onto\b/i,
+  /\bTake the ramp\b/i,
+  /\bEnter\b/i
 ];
 
-function isHighwayInstruction(instruction: string): boolean {
+const HIGHWAY_EXIT_PATTERNS: RegExp[] = [
+  /\bTake exit\b/i,
+  /\bTake the exit\b/i,
+  /\bExit onto\b/i,
+  /\bLeave\b.*\b(motorway|highway|autostrada|autoroute|autobahn)\b/i,
+  /\bAt the roundabout\b/i,
+  /\bTurn (left|right)\b/i,
+  /\bArrive at\b/i
+];
+
+function detectHighwayState(instruction: string, currentlyOnHighway: boolean): boolean {
   const cleanInstruction = instruction.replace(/<[^>]*>/g, '');
-  return ALL_HIGHWAY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  
+  const isExit = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  if (isExit) {
+    return false;
+  }
+  
+  const isEntry = HIGHWAY_ENTRY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  if (isEntry) {
+    return true;
+  }
+  
+  return currentlyOnHighway;
 }
 
 interface HighwaySegment {
@@ -47,25 +69,27 @@ interface HighwaySegment {
 function extractHighwaySegments(route: google.maps.DirectionsRoute): HighwaySegment[] {
   const segments: HighwaySegment[] = [];
   let cumulativeDistanceKm = 0;
+  let onHighway = false;
 
   for (const leg of route.legs) {
     for (const step of leg.steps) {
       const stepDistanceKm = (step.distance?.value || 0) / 1000;
       const instruction = step.instructions || '';
       
-      const isHighway = isHighwayInstruction(instruction);
+      onHighway = detectHighwayState(instruction, onHighway);
       
       segments.push({
         startKm: cumulativeDistanceKm,
         endKm: cumulativeDistanceKm + stepDistanceKm,
-        isHighway
+        isHighway: onHighway
       });
       
       cumulativeDistanceKm += stepDistanceKm;
     }
   }
 
-  console.log(`Extracted ${segments.length} route segments, ${segments.filter(s => s.isHighway).length} on highways`);
+  const totalHighwayKm = segments.filter(s => s.isHighway).reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
+  console.log(`Extracted ${segments.length} route segments, ${segments.filter(s => s.isHighway).length} highway segments (${totalHighwayKm.toFixed(1)} km)`);
   return segments;
 }
 
