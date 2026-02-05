@@ -1,0 +1,58 @@
+Act as a senior developer fixing a route cost calculation bug.
+
+Website: tollcalculator.eu  
+App purpose: calculate toll, vignette and tunnel costs for European road trips.
+
+PROBLEM:
+In some cases, toll calculation is wrong because the app assumes that the entire route inside a country (e.g. Italy) is driven on highways.
+
+Example issue:
+- A route enters Italy
+- Only part of the route uses highways (Autostrada)
+- Other parts use local, regional or non-toll roads
+- The app incorrectly calculates tolls based on total distance inside Italy instead of actual highway distance
+
+ROOT CAUSE:
+- Highway distance is inferred from country-level distance
+- Not all road segments in Italy (and other countries) are tolled
+- Italy tolls are pay-per-distance and apply ONLY to Autostrade segments
+
+TASKS TO FIX:
+
+1. Update route processing logic to:
+   - Distinguish between highway (toll) and non-highway segments
+   - Calculate toll distance ONLY for actual highway/autostrada segments
+
+2. Use route data attributes such as:
+   - road class / road type
+   - motorway / highway flags
+   - toll road indicators (if available from routing API)
+
+3. For Italy specifically:
+   - Apply toll calculation ONLY to:
+     - Autostrade (motorway/highway segments)
+   - Exclude:
+     - City roads
+     - Regional roads
+     - Non-toll national roads
+
+4. If exact toll-road flags are not available:
+   - Approximate by filtering only motorway-class segments
+   - Do NOT assume full country distance is tolled
+
+5. Ensure:
+   - Toll distance < total country distance
+   - Toll cost = highway distance × Italy per-km toll rate
+   - Non-highway distance does NOT add toll cost
+
+IMPORTANT RULES:
+- Do NOT change UI or styling
+- Do NOT change vignette logic
+- Do NOT hardcode distances
+- Keep logic scalable for other pay-per-distance countries (France, Spain, Croatia, etc.)
+
+OUTPUT:
+- Explain what was wrong
+- Show the updated calculation logic
+- Show code changes or pseudocode used to fix it
+- Confirm with an example route that only highway distance is charged

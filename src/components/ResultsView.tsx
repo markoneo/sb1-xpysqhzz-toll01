@@ -34,7 +34,11 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
         ? (country.tollCost * 2) + country.vignetteCost + (country.specialTollsCost * 2)
         : country.tollCost + country.vignetteCost + country.specialTollsCost;
       
-      text += `${country.flag} ${country.countryName}: €${countryTotal.toFixed(2)}\n`;
+      const distanceInfo = country.highwayDistance > 0 && country.highwayDistance < country.estimatedDistance
+        ? `${country.estimatedDistance}km (${country.highwayDistance}km toll road)`
+        : `${country.estimatedDistance}km`;
+      
+      text += `${country.flag} ${country.countryName} (${distanceInfo}): €${countryTotal.toFixed(2)}\n`;
       
       if (country.tollCost > 0) {
         text += `   • Tolls: €${(isReturnTrip ? country.tollCost * 2 : country.tollCost).toFixed(2)}\n`;
@@ -197,7 +201,12 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
                   <span className="text-2xl sm:text-3xl">{country.flag}</span>
                   <div>
                     <h4 className="text-base sm:text-lg font-semibold text-gray-900">{country.countryName}</h4>
-                    <p className="text-xs sm:text-sm text-gray-500">{country.estimatedDistance} km</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {country.estimatedDistance} km
+                      {country.highwayDistance > 0 && country.highwayDistance < country.estimatedDistance && (
+                        <span className="text-blue-600"> ({country.highwayDistance} km toll road)</span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">

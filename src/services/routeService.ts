@@ -16,6 +16,79 @@ export interface RouteData {
   directionsResult?: google.maps.DirectionsResult;
 }
 
+const ALL_HIGHWAY_PATTERNS: RegExp[] = [
+  /\bA\d+\b/,
+  /\bE\d+\b/,
+  /\bAP-?\d+\b/,
+  /\bS\d+\b/,
+  /\bIP\d+\b/,
+  /\bAutostrada\b/i,
+  /\bAutoroute\b/i,
+  /\bAutopista\b/i,
+  /\bAutobahn\b/i,
+  /\bMotorway\b/i,
+  /\bHighway\b/i,
+  /\bEgnatia\b/i,
+  /\bTake the exit\b/i,
+  /\bMerge onto\b/i
+];
+
+function isHighwayInstruction(instruction: string): boolean {
+  const cleanInstruction = instruction.replace(/<[^>]*>/g, '');
+  return ALL_HIGHWAY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+}
+
+interface HighwaySegment {
+  startKm: number;
+  endKm: number;
+  isHighway: boolean;
+}
+
+function extractHighwaySegments(route: google.maps.DirectionsRoute): HighwaySegment[] {
+  const segments: HighwaySegment[] = [];
+  let cumulativeDistanceKm = 0;
+
+  for (const leg of route.legs) {
+    for (const step of leg.steps) {
+      const stepDistanceKm = (step.distance?.value || 0) / 1000;
+      const instruction = step.instructions || '';
+      
+      const isHighway = isHighwayInstruction(instruction);
+      
+      segments.push({
+        startKm: cumulativeDistanceKm,
+        endKm: cumulativeDistanceKm + stepDistanceKm,
+        isHighway
+      });
+      
+      cumulativeDistanceKm += stepDistanceKm;
+    }
+  }
+
+  console.log(`Extracted ${segments.length} route segments, ${segments.filter(s => s.isHighway).length} on highways`);
+  return segments;
+}
+
+function getHighwayDistanceInRange(segments: HighwaySegment[], startKm: number, endKm: number): number {
+  let highwayDistance = 0;
+
+  for (const segment of segments) {
+    if (segment.endKm <= startKm || segment.startKm >= endKm) {
+      continue;
+    }
+
+    const overlapStart = Math.max(segment.startKm, startKm);
+    const overlapEnd = Math.min(segment.endKm, endKm);
+    const overlapDistance = overlapEnd - overlapStart;
+
+    if (segment.isHighway && overlapDistance > 0) {
+      highwayDistance += overlapDistance;
+    }
+  }
+
+  return highwayDistance;
+}
+
 export async function calculateRoute(
   startAddress: string,
   endAddress: string,
@@ -135,6 +208,7 @@ async function detectCountriesAlongRoute(
   totalDistanceKm: number
 ): Promise<CountryDistance[]> {
   const geocoder = new google.maps.Geocoder();
+  const highwaySegments = extractHighwaySegments(route);
 
   let allPoints: google.maps.LatLng[] = [];
 
@@ -265,11 +339,16 @@ async function detectCountriesAlongRoute(
     endKm: totalDistanceKm
   });
 
-  const countryDistanceMap = new Map<string, number>();
+  const countryDistanceMap = new Map<string, { total: number; highway: number }>();
   for (const segment of countrySegments) {
     const distance = segment.endKm - segment.startKm;
-    const existing = countryDistanceMap.get(segment.countryCode) || 0;
-    countryDistanceMap.set(segment.countryCode, existing + distance);
+    const highwayDist = getHighwayDistanceInRange(highwaySegments, segment.startKm, segment.endKm);
+    
+    const existing = countryDistanceMap.get(segment.countryCode) || { total: 0, highway: 0 };
+    countryDistanceMap.set(segment.countryCode, {
+      total: existing.total + distance,
+      highway: existing.highway + highwayDist
+    });
   }
 
   const result: CountryDistance[] = [];
@@ -282,9 +361,11 @@ async function detectCountriesAlongRoute(
   }
 
   for (const countryCode of orderedCountries) {
-    const distance = Math.round((countryDistanceMap.get(countryCode) || 0) * 10) / 10;
-    result.push({ countryCode, distance });
-    console.log(`Country ${countryCode}: ${distance} km`);
+    const distances = countryDistanceMap.get(countryCode) || { total: 0, highway: 0 };
+    const distance = Math.round(distances.total * 10) / 10;
+    const highwayDistance = Math.round(distances.highway * 10) / 10;
+    result.push({ countryCode, distance, highwayDistance });
+    console.log(`Country ${countryCode}: ${distance} km total, ${highwayDistance} km on highways`);
   }
 
   return result;
@@ -360,6 +441,12 @@ async function fallbackCountryDetection(
   totalDistanceKm: number
 ): Promise<CountryDistance[]> {
   const countries: string[] = [];
+  const highwaySegments = extractHighwaySegments(route);
+  
+  const totalHighwayKm = highwaySegments
+    .filter(s => s.isHighway)
+    .reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
+  const highwayRatio = totalDistanceKm > 0 ? totalHighwayKm / totalDistanceKm : 0;
 
   for (const leg of route.legs) {
     console.log('Fallback detection - leg start:', leg.start_address);
@@ -389,9 +476,12 @@ async function fallbackCountryDetection(
   }
 
   const distancePerCountry = totalDistanceKm / countries.length;
+  const highwayPerCountry = distancePerCountry * highwayRatio;
+  
   return countries.map(countryCode => ({
     countryCode,
-    distance: Math.round(distancePerCountry * 10) / 10
+    distance: Math.round(distancePerCountry * 10) / 10,
+    highwayDistance: Math.round(highwayPerCountry * 10) / 10
   }));
 }
 

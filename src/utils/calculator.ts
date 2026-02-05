@@ -18,7 +18,7 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
   const ownedVignettes = tripData.ownedVignettes || [];
   const selectedSpecialTolls = tripData.selectedSpecialTolls || [];
 
-  countryDistances.forEach(({ countryCode, distance }) => {
+  countryDistances.forEach(({ countryCode, distance, highwayDistance }) => {
     const rule = countryRules[countryCode];
     if (!rule) return;
 
@@ -28,6 +28,7 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
     let vignetteOwned = false;
     let vignetteOption = '';
     const estimatedDistance = distance;
+    const tollableDistance = highwayDistance || 0;
 
     if (rule.tollSystem === 'distance' && rule.distanceToll) {
       const pricePerKm =
@@ -35,7 +36,8 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
           ? rule.distanceToll.pricePerKm.car
           : rule.distanceToll.pricePerKm.van;
 
-      tollCost = estimatedDistance * pricePerKm;
+      tollCost = tollableDistance * pricePerKm;
+      console.log(`${countryCode}: Total ${estimatedDistance}km, Highway ${tollableDistance}km, Toll: €${tollCost.toFixed(2)}`);
     }
 
     if ((rule.tollSystem === 'vignette' || rule.tollSystem === 'mixed') && rule.vignette?.required) {
@@ -73,6 +75,7 @@ export function calculateTollCosts(tripData: TripData): CalculationResult {
       vignetteOwned,
       vignetteOption,
       estimatedDistance: Math.round(estimatedDistance),
+      highwayDistance: Math.round(tollableDistance),
       notes: rule.notes || ''
     };
 

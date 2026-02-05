@@ -49,6 +49,12 @@ The workflow "Start application" runs `npm run dev` which starts the Express ser
 - AI-powered tunnel detection for Alpine routes
 
 ## Recent Changes
+- **February 5, 2026: Highway-only toll calculation fix**
+  - Fixed bug where toll calculation assumed 100% of distance was on toll roads
+  - Added highway segment detection in routeService.ts using road name patterns (A1, E45, etc.)
+  - Now only charges tolls for actual highway/motorway distance
+  - Display shows both total distance and toll road distance for distance-tolled countries
+  - Applies to Italy, France, Spain, Croatia, Poland, Portugal, Greece, Serbia
 - Migrated from Bolt/Supabase to Replit environment
 - Ported Supabase Edge Functions to Express server routes
 - Updated frontend to fetch config from server API

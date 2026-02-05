@@ -5,6 +5,7 @@ export type TripType = 'one-way' | 'return';
 export interface CountryDistance {
   countryCode: string;
   distance: number;
+  highwayDistance: number;
 }
 
 export interface SelectedSpecialToll {
@@ -48,6 +49,7 @@ export interface CountryCost {
   vignetteOwned: boolean;
   vignetteOption?: string;
   estimatedDistance: number;
+  highwayDistance: number;
   notes: string;
 }
 
