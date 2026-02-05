@@ -68,19 +68,35 @@ const HIGHWAY_EXIT_PATTERNS: RegExp[] = [
 
 function detectHighwayState(instruction: string, currentlyOnHighway: boolean): boolean {
   const cleanInstruction = instruction.replace(/<[^>]*>/g, '');
+  const lowerInstruction = cleanInstruction.toLowerCase();
   
   const hasHighwayReference = HIGHWAY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
   
   if (hasHighwayReference) {
-    const isExit = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
-    if (isExit && !cleanInstruction.toLowerCase().includes('continue')) {
-      return false;
-    }
     return true;
   }
   
-  const isExitAction = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
-  if (isExitAction && currentlyOnHighway) {
+  if (lowerInstruction.includes('keep left') || 
+      lowerInstruction.includes('keep right') ||
+      lowerInstruction.includes('continue') ||
+      lowerInstruction.includes('stay on') ||
+      lowerInstruction.includes('follow')) {
+    return currentlyOnHighway;
+  }
+  
+  const realExitPatterns = [
+    /\bAt the roundabout\b/i,
+    /\bTurn (left|right)\b/i,
+    /\bArrive at\b/i,
+    /\bDestination\b/i,
+  ];
+  
+  const isRealExit = realExitPatterns.some(pattern => pattern.test(cleanInstruction));
+  if (isRealExit) {
+    return false;
+  }
+  
+  if (lowerInstruction.includes('exit') && !lowerInstruction.includes('onto') && !lowerInstruction.includes('to merge')) {
     return false;
   }
   

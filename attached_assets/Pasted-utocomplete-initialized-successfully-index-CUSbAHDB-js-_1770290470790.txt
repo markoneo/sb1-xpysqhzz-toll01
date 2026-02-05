@@ -1,0 +1,106 @@
+utocomplete initialized successfully
+index-CUSbAHDB.js:180 Google Maps already loaded
+index-CUSbAHDB.js:203 === ROUTE CALCULATION START ===
+index-CUSbAHDB.js:203 Origin: ljublj
+index-CUSbAHDB.js:203 Destination: France
+index-CUSbAHDB.js:203 Waypoints: []
+index-CUSbAHDB.js:203 Waypoints count: 0
+index-CUSbAHDB.js:203 Directions API status: OK
+index-CUSbAHDB.js:203 Leg: Object
+index-CUSbAHDB.js:203 Route totals: Object
+index-CUSbAHDB.js:203 Number of legs: 1
+index-CUSbAHDB.js:203 === ROUTE CALCULATION DATA ===
+index-CUSbAHDB.js:203 Attempting accurate polyline-based country detection...
+index-CUSbAHDB.js:203 === HIGHWAY DETECTION START ===
+index-CUSbAHDB.js:203 [HWY] 0.5km: Merge onto A1/A2/E70Toll road
+index-CUSbAHDB.js:203 [HWY] 54.5km: Continue onto A1/E61/E70Toll road
+index-CUSbAHDB.js:203 [HWY] 41.6km: Continue onto H4Toll roadEntering Italy
+index-CUSbAHDB.js:203 [HWY] 17.3km: Continue onto A34Toll road
+index-CUSbAHDB.js:203 [road] 11.5km: Take the exit onto A4/E70 towards Milano/VeneziaToll road
+index-CUSbAHDB.js:203 [road] 415.8km: Keep left to continue on A4Toll road
+index-CUSbAHDB.js:203 [HWY] 27.9km: Keep left to continue on A4/E64Toll road
+index-CUSbAHDB.js:203 [road] 25.0km: Take exit Santhià to merge onto E25 towards T1/Monte Bianco/E27/T2/G.S.BernardoT
+index-CUSbAHDB.js:203 [road] 106.2km: Take the exit onto A5/E25 towards AostaToll road
+index-CUSbAHDB.js:203 [HWY] 0.7km: Continue onto E25/SS26dir
+index-CUSbAHDB.js:203 [HWY] 5.1km: SS26dir turns slightly left and becomes T1 (signs for Francia)Toll roadEntering 
+index-CUSbAHDB.js:203 [HWY] 27.5km: Continue onto N205Toll road
+index-CUSbAHDB.js:203 [HWY] 55.4km: Continue onto A40Toll road
+index-CUSbAHDB.js:203 [road] 0.3km: Take the exit towards A40Toll road
+index-CUSbAHDB.js:203 [HWY] 0.5km: Take the slip road to A40
+index-CUSbAHDB.js:203 [HWY] 140.5km: Continue onto A40Toll road
+index-CUSbAHDB.js:203 [HWY] 10.0km: Continue onto A406/E62Toll road
+index-CUSbAHDB.js:203 [HWY] 63.4km: Continue onto E62/N79
+index-CUSbAHDB.js:203 [road] 10.9km: Take the exit onto E62/N79 towards Moulins/Nevers/Vichy/Digoin/Paray Le M - Cent
+index-CUSbAHDB.js:203 [HWY] 91.3km: Continue onto A79/E62Toll road
+index-CUSbAHDB.js:203 [road] 22.9km: Take the exit onto A71Toll road
+index-CUSbAHDB.js:203 [HWY] 0.7km: Take the A714/E62 exit towards Guéret/MontluçonToll road
+index-CUSbAHDB.js:203 [HWY] 8.9km: Continue onto A714/E62Toll road
+index-CUSbAHDB.js:203 [HWY] 37.4km: Continue onto E62/N145
+index-CUSbAHDB.js:203 [road] 0.3km: Take exit 43 towards Aubusson/Ahun/Chénérailles/Gouzon
+index-CUSbAHDB.js:203 === HIGHWAY DETECTION END: 585.9 km highway of 1189.3 km total (49%) ===
+index-CUSbAHDB.js:203 Decoded 220 points from overview polyline
+index-CUSbAHDB.js:203 Total path distance from polyline: 1151.8 km
+index-CUSbAHDB.js:203 Using 50 sample points for country detection
+index-CUSbAHDB.js:203 Sampling 50 unique points along route
+index-CUSbAHDB.js:203 Point at 0.0km: SI
+index-CUSbAHDB.js:203 Point at 21.8km: SI
+index-CUSbAHDB.js:203 Point at 46.1km: SI
+index-CUSbAHDB.js:203 Point at 67.8km: SI
+index-CUSbAHDB.js:203 Point at 93.7km: SI
+index-CUSbAHDB.js:203 Point at 118.0km: IT
+index-CUSbAHDB.js:203 Point at 137.4km: IT
+index-CUSbAHDB.js:203 Point at 168.8km: IT
+index-CUSbAHDB.js:203 Point at 178.3km: IT
+index-CUSbAHDB.js:203 Point at 209.4km: IT
+index-CUSbAHDB.js:203 Point at 236.7km: IT
+index-CUSbAHDB.js:203 Point at 260.8km: IT
+index-CUSbAHDB.js:203 Point at 281.1km: IT
+index-CUSbAHDB.js:203 Point at 307.4km: IT
+index-CUSbAHDB.js:203 Point at 328.5km: IT
+index-CUSbAHDB.js:203 Point at 347.7km: IT
+index-CUSbAHDB.js:203 Point at 379.8km: IT
+index-CUSbAHDB.js:203 Point at 400.4km: IT
+index-CUSbAHDB.js:203 Point at 420.6km: IT
+index-CUSbAHDB.js:203 Point at 444.5km: IT
+index-CUSbAHDB.js:203 Point at 464.1km: IT
+index-CUSbAHDB.js:203 Point at 495.3km: IT
+index-CUSbAHDB.js:203 Point at 518.2km: IT
+index-CUSbAHDB.js:203 Point at 538.7km: IT
+index-CUSbAHDB.js:203 Point at 561.0km: IT
+index-CUSbAHDB.js:203 Point at 588.7km: IT
+index-CUSbAHDB.js:203 Point at 612.2km: IT
+index-CUSbAHDB.js:203 Point at 634.5km: IT
+index-CUSbAHDB.js:203 Point at 659.5km: IT
+index-CUSbAHDB.js:203 Point at 681.8km: IT
+index-CUSbAHDB.js:203 Point at 705.2km: FR
+index-CUSbAHDB.js:203 Point at 729.5km: FR
+index-CUSbAHDB.js:203 Point at 754.4km: FR
+index-CUSbAHDB.js:203 Point at 775.0km: FR
+index-CUSbAHDB.js:203 Point at 798.8km: FR
+index-CUSbAHDB.js:203 Point at 824.6km: FR
+index-CUSbAHDB.js:203 Point at 845.5km: FR
+index-CUSbAHDB.js:203 Point at 870.4km: FR
+index-CUSbAHDB.js:203 Point at 890.5km: FR
+index-CUSbAHDB.js:203 Point at 917.4km: FR
+index-CUSbAHDB.js:203 Point at 940.7km: FR
+index-CUSbAHDB.js:203 Point at 962.9km: FR
+index-CUSbAHDB.js:203 Point at 989.4km: FR
+index-CUSbAHDB.js:203 Point at 1008.5km: FR
+index-CUSbAHDB.js:203 Point at 1039.8km: FR
+index-CUSbAHDB.js:203 Point at 1059.1km: FR
+index-CUSbAHDB.js:203 Point at 1081.4km: FR
+index-CUSbAHDB.js:203 Point at 1105.4km: FR
+index-CUSbAHDB.js:203 Point at 1129.1km: FR
+index-CUSbAHDB.js:203 Point at 1151.8km: FR
+index-CUSbAHDB.js:203 Successfully geocoded 50 points
+index-CUSbAHDB.js:203 Border detected at ~105.9km: SI -> IT
+index-CUSbAHDB.js:203 Border detected at ~693.5km: IT -> FR
+index-CUSbAHDB.js:203 Country SI: 105.9 km total, 101.1 km on highways
+index-CUSbAHDB.js:203 Country IT: 587.6 km total, 42.6 km on highways
+index-CUSbAHDB.js:203 Country FR: 495.8 km total, 442.2 km on highways
+index-CUSbAHDB.js:203 Polyline detection result: (3) [{…}, {…}, {…}]
+index-CUSbAHDB.js:203 Final country distances: (3) [{…}, {…}, {…}]
+index-CUSbAHDB.js:203 Final countries: (3) ['SI', 'IT', 'FR']
+index-CUSbAHDB.js:203 IT: Total 587.6km, Highway 42.6km, Toll: €3.41
+index-CUSbAHDB.js:203 FR: Total 495.8km, Highway 442.2km, Toll: €39.80
+index-CUSbAHDB.js:180 Google Maps already loaded
