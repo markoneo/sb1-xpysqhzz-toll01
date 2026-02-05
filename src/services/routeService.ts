@@ -16,44 +16,76 @@ export interface RouteData {
   directionsResult?: google.maps.DirectionsResult;
 }
 
-const HIGHWAY_ENTRY_PATTERNS: RegExp[] = [
-  /\bA\d+\b/,
-  /\bE\d+\b/,
-  /\bAP-?\d+\b/,
-  /\bS\d+\b/,
-  /\bIP\d+\b/,
+const HIGHWAY_PATTERNS: RegExp[] = [
+  /\bA-?\d+\b/i,
+  /\bE-?\d+\b/i,
+  /\bAP-?\d+\b/i,
+  /\bS-?\d+\b/i,
+  /\bIP-?\d+\b/i,
+  /\bSR-?\d+\b/i,
+  /\bSS-?\d+\b/i,
+  /\bN-?\d+\b/i,
+  /\bM-?\d+\b/i,
+  /\bD-?\d+\b/i,
   /\bAutostrada\b/i,
   /\bAutoroute\b/i,
   /\bAutopista\b/i,
   /\bAutobahn\b/i,
   /\bMotorway\b/i,
   /\bHighway\b/i,
+  /\bAutosnelweg\b/i,
+  /\bAutoestrada\b/i,
+  /\bAvtocesta\b/i,
   /\bEgnatia\b/i,
-  /\bMerge onto\b/i,
+  /\bRaccordo\b/i,
+  /\bTangenziale\b/i,
+  /\bPeriférico\b/i,
+  /\bRing\b/i,
+  /\/A\d+\b/,
+  /\/E\d+\b/,
+];
+
+const HIGHWAY_ENTRY_PATTERNS: RegExp[] = [
+  /\bMerge\b/i,
   /\bTake the ramp\b/i,
-  /\bEnter\b/i
+  /\bEnter\b/i,
+  /\bJoin\b/i,
+  /\bContinue onto\b.*\b(A-?\d|E-?\d|Autostrada|Autoroute|Autopista|Autobahn|Motorway|Highway)\b/i,
 ];
 
 const HIGHWAY_EXIT_PATTERNS: RegExp[] = [
   /\bTake exit\b/i,
   /\bTake the exit\b/i,
+  /\bExit\s+\d+\b/i,
   /\bExit onto\b/i,
-  /\bLeave\b.*\b(motorway|highway|autostrada|autoroute|autobahn)\b/i,
+  /\bExit toward\b/i,
+  /\bLeave\b/i,
   /\bAt the roundabout\b/i,
   /\bTurn (left|right)\b/i,
-  /\bArrive at\b/i
+  /\bArrive at\b/i,
+  /\bDestination\b/i,
 ];
 
 function detectHighwayState(instruction: string, currentlyOnHighway: boolean): boolean {
   const cleanInstruction = instruction.replace(/<[^>]*>/g, '');
   
-  const isExit = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
-  if (isExit) {
+  const hasHighwayReference = HIGHWAY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  
+  if (hasHighwayReference) {
+    const isExit = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+    if (isExit && !cleanInstruction.toLowerCase().includes('continue')) {
+      return false;
+    }
+    return true;
+  }
+  
+  const isExitAction = HIGHWAY_EXIT_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  if (isExitAction && currentlyOnHighway) {
     return false;
   }
   
-  const isEntry = HIGHWAY_ENTRY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
-  if (isEntry) {
+  const isEntryAction = HIGHWAY_ENTRY_PATTERNS.some(pattern => pattern.test(cleanInstruction));
+  if (isEntryAction) {
     return true;
   }
   
@@ -71,12 +103,20 @@ function extractHighwaySegments(route: google.maps.DirectionsRoute): HighwaySegm
   let cumulativeDistanceKm = 0;
   let onHighway = false;
 
+  console.log('=== HIGHWAY DETECTION START ===');
+  
   for (const leg of route.legs) {
     for (const step of leg.steps) {
       const stepDistanceKm = (step.distance?.value || 0) / 1000;
       const instruction = step.instructions || '';
+      const cleanInstruction = instruction.replace(/<[^>]*>/g, '');
       
+      const wasOnHighway = onHighway;
       onHighway = detectHighwayState(instruction, onHighway);
+      
+      if (stepDistanceKm > 5 || wasOnHighway !== onHighway) {
+        console.log(`[${onHighway ? 'HWY' : 'road'}] ${stepDistanceKm.toFixed(1)}km: ${cleanInstruction.substring(0, 80)}`);
+      }
       
       segments.push({
         startKm: cumulativeDistanceKm,
@@ -89,7 +129,8 @@ function extractHighwaySegments(route: google.maps.DirectionsRoute): HighwaySegm
   }
 
   const totalHighwayKm = segments.filter(s => s.isHighway).reduce((sum, s) => sum + (s.endKm - s.startKm), 0);
-  console.log(`Extracted ${segments.length} route segments, ${segments.filter(s => s.isHighway).length} highway segments (${totalHighwayKm.toFixed(1)} km)`);
+  const totalKm = cumulativeDistanceKm;
+  console.log(`=== HIGHWAY DETECTION END: ${totalHighwayKm.toFixed(1)} km highway of ${totalKm.toFixed(1)} km total (${((totalHighwayKm/totalKm)*100).toFixed(0)}%) ===`);
   return segments;
 }
 
