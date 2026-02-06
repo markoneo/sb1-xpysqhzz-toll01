@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapPin } from 'lucide-react';
 import { loadGoogleMapsAPI } from '../utils/googleMapsLoader';
 
@@ -19,10 +19,20 @@ export function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const onChangeRef = useRef(onChange);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isSelectingRef = useRef(false);
 
   const iconColor = icon === 'start' ? 'text-green-600' : icon === 'end' ? 'text-red-600' : 'text-yellow-600';
+
+  onChangeRef.current = onChange;
+
+  useEffect(() => {
+    if (inputRef.current && inputRef.current.value !== value && !isSelectingRef.current) {
+      inputRef.current.value = value;
+    }
+  }, [value]);
 
   useEffect(() => {
     let isMounted = true;
@@ -34,6 +44,10 @@ export function AddressAutocomplete({
         console.log('Google Maps API loaded successfully');
 
         if (!isMounted || !inputRef.current) return;
+
+        if (autocompleteRef.current) {
+          google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
 
         console.log('Initializing Autocomplete...');
         autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
@@ -69,7 +83,14 @@ export function AddressAutocomplete({
             return;
           }
 
-          onChange(place.formatted_address, place);
+          isSelectingRef.current = true;
+          if (inputRef.current) {
+            inputRef.current.value = place.formatted_address;
+          }
+          onChangeRef.current(place.formatted_address, place);
+          setTimeout(() => {
+            isSelectingRef.current = false;
+          }, 100);
         });
 
         console.log('Autocomplete initialized successfully');
@@ -93,7 +114,11 @@ export function AddressAutocomplete({
         google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [onChange]);
+  }, []);
+
+  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onChangeRef.current(e.target.value);
+  }, []);
 
   return (
     <div>
@@ -102,10 +127,11 @@ export function AddressAutocomplete({
         {label}
       </label>
       <input
+        data-testid={`input-address-${icon}`}
         ref={inputRef}
         type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        defaultValue={value}
+        onChange={handleInput}
         placeholder={isLoading ? 'Loading...' : placeholder}
         disabled={isLoading || !!error}
         className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-0 text-lg disabled:bg-gray-100"
