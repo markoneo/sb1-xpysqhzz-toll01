@@ -1,16 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Switch, Route, useLocation } from 'wouter';
 import { ChevronRight, ChevronLeft, Calculator } from 'lucide-react';
 import { VehicleStep } from './components/VehicleStep';
 import { RouteStep } from './components/RouteStep';
 import { DatesStep } from './components/DatesStep';
 import { ResultsView } from './components/ResultsView';
+import { InfoContent } from './components/InfoContent';
+import { FAQSection } from './components/FAQSection';
+import { Footer } from './components/Footer';
 import { TripData, VehicleType, FuelType, CalculationResult, SelectedSpecialToll } from './types';
 import { calculateTollCosts } from './utils/calculator';
 import { calculateRoute, getCountriesFromAddresses } from './services/routeService';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { CookiePolicy } from './pages/CookiePolicy';
+import { TermsConditions } from './pages/TermsConditions';
+import { AboutUs } from './pages/AboutUs';
+import { Contact } from './pages/Contact';
 
 type Step = 'vehicle' | 'route' | 'dates' | 'results';
 
-function App() {
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  return null;
+}
+
+function HomePage() {
+  useEffect(() => { document.title = 'European Toll, Vignette & Tunnel Cost Calculator | TollCalculator.eu'; }, []);
   const [currentStep, setCurrentStep] = useState<Step>('vehicle');
   const [tripData, setTripData] = useState<TripData>({
     vehicleType: 'car',
@@ -154,141 +172,160 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 safe-top">
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-12">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900">
-              European Road Trip Cost Calculator
-            </h1>
-          </div>
-          <p className="text-sm sm:text-base text-gray-600 px-2 max-w-2xl mx-auto">
-            Calculate your driving costs across Europe. Get estimates for motorway tolls, country vignettes and tunnel fees in Austria, Switzerland, Italy, France, Slovenia and more.
-          </p>
-        </div>
-
-        {currentStep !== 'results' && (
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center justify-between max-w-md sm:max-w-2xl mx-auto px-2">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg transition-all duration-300 ${
-                        currentStepIndex >= index
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                          : 'bg-gray-200 text-gray-400'
-                      }`}
-                    >
-                      {step.number}
-                    </div>
-                    <div
-                      className={`mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium transition-colors duration-300 ${
-                        currentStepIndex >= index ? 'text-blue-600' : 'text-gray-400'
-                      }`}
-                    >
-                      {step.label}
-                    </div>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`h-1 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-500 ${
-                        currentStepIndex > index ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
-                </div>
-              ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col safe-top">
+      <div className="flex-1">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-12">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900">
+                European Toll, Vignette & Tunnel Cost Calculator
+              </h1>
             </div>
+            <p className="text-sm sm:text-base text-gray-600 px-2 max-w-3xl mx-auto">
+              Plan your European road trip budget. Get estimates for motorway tolls, country vignettes, and tunnel fees across Austria, Switzerland, Italy, France, Slovenia, and more. Enter your route details below to calculate costs.
+            </p>
           </div>
-        )}
-
-        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 md:p-12 transition-all duration-300">
-          {currentStep === 'vehicle' && (
-            <VehicleStep
-              vehicleType={tripData.vehicleType}
-              axles={tripData.axles}
-              fuelType={tripData.fuelType}
-              ownedVignettes={tripData.ownedVignettes}
-              onChange={handleChange}
-            />
-          )}
-
-          {currentStep === 'route' && (
-            <RouteStep
-              startAddress={tripData.startAddress}
-              endAddress={tripData.endAddress}
-              waypointAddresses={tripData.waypointAddresses}
-              tripType={tripData.tripType}
-              selectedSpecialTolls={tripData.selectedSpecialTolls}
-              directionsResult={previewDirectionsResult || undefined}
-              onChange={handleChange}
-              onRoutePreviewCalculated={setPreviewDirectionsResult}
-            />
-          )}
-
-          {currentStep === 'dates' && (
-            <DatesStep
-              startDate={tripData.startDate}
-              endDate={tripData.endDate}
-              onChange={handleChange}
-            />
-          )}
-
-          {currentStep === 'results' && result && (
-            <ResultsView result={result} tripData={tripData} onBack={handleReset} />
-          )}
 
           {currentStep !== 'results' && (
-            <div className="flex items-center justify-between mt-6 sm:mt-8 pt-6 sm:pt-8 border-t-2 border-gray-100 gap-3">
-              <button
-                onClick={handleBack}
-                disabled={isFirstStep}
-                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
-                  isFirstStep
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
-                }`}
-                data-testid="button-back-step"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <span className="hidden sm:inline">Back</span>
-              </button>
-
-              <button
-                onClick={handleNext}
-                disabled={!canProceed() || isCalculating}
-                className={`flex-1 sm:flex-none px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
-                  canProceed() && !isCalculating
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-lg shadow-blue-200'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-                data-testid="button-next-step"
-              >
-                {isCalculating ? (
-                  <>
-                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                    <span className="hidden sm:inline">Calculating...</span>
-                  </>
-                ) : (
-                  <>
-                    {isLastStep ? 'Calculate' : 'Next'}
-                    <ChevronRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between max-w-md sm:max-w-2xl mx-auto px-2">
+                {steps.map((step, index) => (
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <div
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg transition-all duration-300 ${
+                          currentStepIndex >= index
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                            : 'bg-gray-200 text-gray-400'
+                        }`}
+                      >
+                        {step.number}
+                      </div>
+                      <div
+                        className={`mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium transition-colors duration-300 ${
+                          currentStepIndex >= index ? 'text-blue-600' : 'text-gray-400'
+                        }`}
+                      >
+                        {step.label}
+                      </div>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={`h-1 flex-1 mx-1 sm:mx-2 rounded-full transition-all duration-500 ${
+                          currentStepIndex > index ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 md:p-12 transition-all duration-300">
+            {currentStep === 'vehicle' && (
+              <VehicleStep
+                vehicleType={tripData.vehicleType}
+                axles={tripData.axles}
+                fuelType={tripData.fuelType}
+                ownedVignettes={tripData.ownedVignettes}
+                onChange={handleChange}
+              />
+            )}
+
+            {currentStep === 'route' && (
+              <RouteStep
+                startAddress={tripData.startAddress}
+                endAddress={tripData.endAddress}
+                waypointAddresses={tripData.waypointAddresses}
+                tripType={tripData.tripType}
+                selectedSpecialTolls={tripData.selectedSpecialTolls}
+                directionsResult={previewDirectionsResult || undefined}
+                onChange={handleChange}
+                onRoutePreviewCalculated={setPreviewDirectionsResult}
+              />
+            )}
+
+            {currentStep === 'dates' && (
+              <DatesStep
+                startDate={tripData.startDate}
+                endDate={tripData.endDate}
+                onChange={handleChange}
+              />
+            )}
+
+            {currentStep === 'results' && result && (
+              <ResultsView result={result} tripData={tripData} onBack={handleReset} />
+            )}
+
+            {currentStep !== 'results' && (
+              <div className="flex items-center justify-between mt-6 sm:mt-8 pt-6 sm:pt-8 border-t-2 border-gray-100 gap-3">
+                <button
+                  onClick={handleBack}
+                  disabled={isFirstStep}
+                  className={`flex-1 sm:flex-none px-4 sm:px-6 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
+                    isFirstStep
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+                  }`}
+                  data-testid="button-back-step"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+
+                <button
+                  onClick={handleNext}
+                  disabled={!canProceed() || isCalculating}
+                  className={`flex-1 sm:flex-none px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
+                    canProceed() && !isCalculating
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-lg shadow-blue-200'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                  data-testid="button-next-step"
+                >
+                  {isCalculating ? (
+                    <>
+                      <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                      <span className="hidden sm:inline">Calculating...</span>
+                    </>
+                  ) : (
+                    <>
+                      {isLastStep ? 'Calculate' : 'Next'}
+                      <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500 px-4 pb-4 safe-bottom">
-          <p>
-            Built for European road travelers • Data updated 2026
-          </p>
-        </div>
+        <InfoContent />
+
+        <FAQSection />
       </div>
+
+      <Footer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/cookies" component={CookiePolicy} />
+        <Route path="/terms" component={TermsConditions} />
+        <Route path="/about" component={AboutUs} />
+        <Route path="/contact" component={Contact} />
+        <Route component={HomePage} />
+      </Switch>
+    </>
   );
 }
 

@@ -1,21 +1,19 @@
 # EU Toll Calculator
 
 ## Overview
-A web application that helps travelers estimate toll and vignette costs for European road trips. The app calculates motorway tolls, tunnel fees, and vignette requirements across multiple European countries including Austria, Switzerland, Slovenia, Italy, France, and more.
+A web application (tollcalculator.eu) that helps travelers estimate toll and vignette costs for European road trips. The app calculates motorway tolls, tunnel fees, and vignette requirements across multiple European countries including Austria, Switzerland, Slovenia, Italy, France, and more.
 
 ## Current State
-- **Status**: Fully migrated from Bolt to Replit environment
-- **Last Updated**: February 4, 2026
+- **Status**: Fully operational with AdSense-compliant content
+- **Last Updated**: February 8, 2026
 
 ## Project Architecture
 
-### Frontend (React + Vite)
+### Frontend (React + Vite + Wouter)
 - Located in `/src`
-- Multi-step wizard interface for:
-  1. Vehicle selection (car, van, truck)
-  2. Route planning with Google Maps integration
-  3. Date selection for trip duration
-  4. Results display with cost breakdown
+- Multi-page app with wouter routing
+- Main page: Multi-step wizard calculator + informational content + FAQ
+- Legal pages: Privacy, Cookies, Terms, About, Contact
 
 ### Backend (Express)
 - Located in `/server`
@@ -24,8 +22,16 @@ A web application that helps travelers estimate toll and vignette costs for Euro
   - `POST /api/detect-tunnels` - AI-powered tunnel detection using OpenAI
 
 ### Key Files
-- `src/App.tsx` - Main application component
-- `src/services/routeService.ts` - Google Maps route calculation
+- `src/App.tsx` - Main app with routing (wouter), HomePage calculator, ScrollToTop
+- `src/components/InfoContent.tsx` - Long-form informational content (tolls, vignettes, tunnels, example routes)
+- `src/components/FAQSection.tsx` - Accordion FAQ with 8 questions
+- `src/components/Footer.tsx` - Persistent footer with legal page links
+- `src/pages/PrivacyPolicy.tsx` - Privacy policy (GDPR, AdSense, Analytics)
+- `src/pages/CookiePolicy.tsx` - Cookie policy
+- `src/pages/TermsConditions.tsx` - Terms & conditions
+- `src/pages/AboutUs.tsx` - About page
+- `src/pages/Contact.tsx` - Contact page (email, country, website)
+- `src/services/routeService.ts` - Google Maps route calculation + highway detection
 - `src/services/tunnelDetectionService.ts` - Tunnel detection API client
 - `src/utils/calculator.ts` - Toll cost calculation logic
 - `src/data/countryRules.ts` - Toll/vignette data for each country
@@ -43,27 +49,35 @@ The workflow "Start application" runs `npm run dev` which starts the Express ser
 - Route calculation using Google Maps Directions API
 - Country detection along route
 - Vignette cost calculation based on trip duration
-- Distance-based toll calculation
+- Distance-based toll calculation (highway-only detection)
 - Special toll handling (tunnels, bridges, passes)
 - One-way and return trip support
 - AI-powered tunnel detection for Alpine routes
+- Google Analytics (G-3PQE0YHJ68)
+- Google AdSense ready (ca-pub-7696212092320435)
 
 ## Recent Changes
+- **February 8, 2026: AdSense compliance & content additions**
+  - Added wouter routing for multi-page support
+  - Added long-form informational content (tolls, vignettes, tunnels, how calculator works, example routes)
+  - Added FAQ section with 8 expandable questions
+  - Created legal pages: Privacy Policy, Cookie Policy, Terms & Conditions, About Us, Contact
+  - Added persistent footer with links to all legal/trust pages
+  - Updated H1 to "European Toll, Vignette & Tunnel Cost Calculator"
+  - Per-page SEO titles via document.title
+  - No calculation logic was modified
+- **February 8, 2026: Highway detection improvements**
+  - Improved highway state detection to correctly handle highway-to-highway transitions
+  - "Take the exit onto A4/E70" now correctly stays as highway
+  - Fixed address autocomplete truncation bug (controlled→uncontrolled input)
 - **February 5, 2026: Highway-only toll calculation fix**
   - Fixed bug where toll calculation assumed 100% of distance was on toll roads
-  - Added highway segment detection in routeService.ts using road name patterns (A1, E45, etc.)
+  - Added highway segment detection in routeService.ts using road name patterns
   - Now only charges tolls for actual highway/motorway distance
-  - Display shows both total distance and toll road distance for distance-tolled countries
   - Applies to Italy, France, Spain, Croatia, Poland, Portugal, Greece, Serbia
-- Migrated from Bolt/Supabase to Replit environment
-- Ported Supabase Edge Functions to Express server routes
-- Updated frontend to fetch config from server API
-- Removed Supabase dependency
-- Added comprehensive mobile-friendly improvements:
-  - PWA meta tags (apple-mobile-web-app-capable, theme-color)
-  - Responsive layouts using Tailwind sm: breakpoints
-  - Vehicle cards stack vertically on mobile (grid-cols-1 sm:grid-cols-3)
-  - Touch-friendly buttons with active:scale-95 transitions
-  - Larger input touch targets (min-h-12)
-  - Compact stats display on mobile
-  - Pinch-to-zoom enabled for accessibility
+- Mobile-friendly improvements (PWA meta tags, responsive layouts, touch-friendly)
+
+## User Preferences
+- Do NOT change, refactor, or touch any calculation logic
+- Calculator behavior must remain identical
+- Use neutral, informative language (no marketing/sales language)

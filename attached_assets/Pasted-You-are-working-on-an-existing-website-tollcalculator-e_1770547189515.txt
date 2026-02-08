@@ -1,0 +1,120 @@
+You are working on an existing website: tollcalculator.eu.
+
+PRIMARY RULE (VERY IMPORTANT):
+DO NOT change, refactor, optimize, or touch ANY calculation logic.
+DO NOT modify APIs, formulas, routes, pricing, or backend behavior.
+DO NOT change how tolls, vignettes, or tunnel costs are calculated.
+The calculator must behave EXACTLY the same as before.
+
+Allowed changes:
+- UI layout
+- Text content
+- Headings and structure
+- Static informational sections
+- Legal and trust pages
+- Footer and navigation
+
+Goal:
+Make the website compliant with Google AdSense policies and eligible for approval
+by adding proper publisher-content and trust signals.
+
+ADDITIONAL RULES:
+- The calculator must remain fully functional and unchanged.
+- Do NOT add ads yet.
+- Do NOT add popups, banners, or forced interactions.
+- Do NOT use marketing or sales language (no “premium”, “luxury”, etc.).
+- Use neutral, informative language for everyday travelers.
+- All content must be visible without login.
+
+TASKS TO COMPLETE:
+
+1. MAIN PAGE CONTENT (CRITICAL)
+Add long-form informational content on the SAME page as the calculator.
+
+Structure:
+
+H1:
+European Toll, Vignette & Tunnel Cost Calculator
+
+Intro (2–3 paragraphs):
+Explain road tolls, vignettes, and tunnel fees in Europe.
+Explain that costs depend on country, vehicle type, and route.
+
+Add the following sections (above or below the calculator):
+
+H2: How road tolls work in Europe
+- Distance-based toll systems (Italy, France, Spain)
+- Ticket and barrier systems
+
+H2: What is a vignette
+- Time-based road fees
+- Digital vs sticker vignettes
+- Countries using vignettes (Austria, Slovenia, Switzerland, etc.)
+
+H2: Tunnel and mountain pass fees
+- Separate fees for tunnels and alpine passes
+- Examples (Brenner, Mont Blanc, Tauern)
+
+H2: How this calculator works
+- Describe route analysis
+- Detection of toll roads, vignettes, tunnels
+- Results are estimates
+
+H2: Example routes
+- 3 realistic example routes with explanations (no prices)
+
+Total content length:
+Minimum 800–1200 words.
+
+2. FAQ SECTION
+Add at least 6 FAQ items, such as:
+- Do I need a vignette for every country?
+- Are tunnel fees included in tolls?
+- Why do results change by route?
+- Is this calculator free?
+- Are results always exact?
+- Can I use it for vans or larger vehicles?
+
+3. LEGAL & TRUST PAGES (MANDATORY)
+Create and link in footer:
+- Privacy Policy
+- Cookie Policy
+- Terms & Conditions
+- About Us
+- Contact
+
+Contact page must include:
+- Website name
+- Country of operation
+- Contact email
+
+Privacy & Cookie Policy must mention:
+- Google AdSense
+- Cookies
+- Analytics usage
+- GDPR-friendly data protection wording
+
+4. FOOTER
+Footer must appear on all pages and include:
+- Links to all legal pages
+- Website name
+- Copyright notice
+
+5. UI & TECHNICAL REQUIREMENTS
+- One clear H1 per page
+- No placeholder or “under construction” text
+- No empty pages
+- Page must be indexable (no noindex)
+- Content must load before or together with calculator results
+- Keep clear spacing between text and calculator
+
+6. ADSENSE SAFETY RULES
+- Do NOT place ads inside forms or calculator inputs
+- Ads (when added later) must be inside content areas only
+- Calculator screens must not be ad-only screens
+
+FINAL CONFIRMATION:
+Confirm explicitly that:
+- No calculation logic was changed
+- Only UI and content were modified
+- The calculator output remains identical
