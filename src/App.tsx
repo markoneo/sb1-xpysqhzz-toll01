@@ -10,7 +10,7 @@ import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
 import { TripData, VehicleType, FuelType, CalculationResult, SelectedSpecialToll } from './types';
 import { calculateTollCosts } from './utils/calculator';
-import { calculateRoute, getCountriesFromAddresses } from './services/routeService';
+import { calculateRoute, calculateRouteFromDirections, getCountriesFromAddresses } from './services/routeService';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { CookiePolicy } from './pages/CookiePolicy';
 import { TermsConditions } from './pages/TermsConditions';
@@ -47,6 +47,7 @@ function HomePage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [previewDirectionsResult, setPreviewDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
+  const [previewRouteIndex, setPreviewRouteIndex] = useState(0);
 
   const handleChange = (field: string, value: string | string[] | VehicleType | FuelType | number | 'one-way' | 'return' | SelectedSpecialToll[]) => {
     setTripData((prev) => {
@@ -92,11 +93,13 @@ function HomePage() {
     if (isLastStep) {
       setIsCalculating(true);
       try {
-        const routeData = await calculateRoute(
-          tripData.startAddress,
-          tripData.endAddress,
-          tripData.waypointAddresses
-        );
+        const routeData = previewDirectionsResult
+          ? await calculateRouteFromDirections(previewDirectionsResult, previewRouteIndex)
+          : await calculateRoute(
+              tripData.startAddress,
+              tripData.endAddress,
+              tripData.waypointAddresses
+            );
 
         if (routeData) {
           const updatedTripData = {
@@ -125,7 +128,7 @@ function HomePage() {
             ...tripData,
             routeData: {
               countries,
-              countryDistances: countries.map(code => ({ countryCode: code, distance: 150 })),
+              countryDistances: countries.map(code => ({ countryCode: code, distance: 150, highwayDistance: 100 })),
               totalDistance: 300,
               totalDuration: 240
             }
@@ -242,8 +245,13 @@ function HomePage() {
                 tripType={tripData.tripType}
                 selectedSpecialTolls={tripData.selectedSpecialTolls}
                 directionsResult={previewDirectionsResult || undefined}
+                selectedRouteIndex={previewRouteIndex}
                 onChange={handleChange}
-                onRoutePreviewCalculated={setPreviewDirectionsResult}
+                onRoutePreviewCalculated={(result) => {
+                  setPreviewDirectionsResult(result);
+                  setPreviewRouteIndex(0);
+                }}
+                onRouteSelected={setPreviewRouteIndex}
               />
             )}
 

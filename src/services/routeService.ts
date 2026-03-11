@@ -586,6 +586,67 @@ async function reverseGeocodeToCountry(
   });
 }
 
+export async function calculateRouteFromDirections(
+  directionsResult: google.maps.DirectionsResult,
+  routeIndex: number
+): Promise<RouteData | null> {
+  try {
+    await loadGoogleMapsAPI();
+
+    const route = directionsResult.routes[routeIndex];
+    if (!route) return null;
+
+    let totalDistance = 0;
+    let totalDuration = 0;
+
+    const legs = route.legs.map(leg => {
+      const legDistanceMeters = leg.distance?.value || 0;
+      const legDurationSeconds = leg.duration?.value || 0;
+      totalDistance += legDistanceMeters;
+      totalDuration += legDurationSeconds;
+      return {
+        distance: legDistanceMeters / 1000,
+        duration: legDurationSeconds / 60,
+        startAddress: leg.start_address,
+        endAddress: leg.end_address
+      };
+    });
+
+    const totalDistanceKm = totalDistance / 1000;
+    const totalDurationMinutes = totalDuration / 60;
+
+    let countryDistances: CountryDistance[] = [];
+
+    try {
+      countryDistances = await detectCountriesAlongRoute(route, totalDistanceKm);
+    } catch (e) {
+      console.error('Route country detection failed:', e);
+    }
+
+    if (countryDistances.length === 0) {
+      try {
+        countryDistances = await fallbackCountryDetection(route, totalDistanceKm);
+      } catch (e) {
+        console.error('Fallback country detection failed:', e);
+      }
+    }
+
+    const countries = countryDistances.map(cd => cd.countryCode);
+
+    return {
+      countries,
+      countryDistances,
+      totalDistance: totalDistanceKm,
+      totalDuration: totalDurationMinutes,
+      legs,
+      directionsResult
+    };
+  } catch (error) {
+    console.error('Error calculating route from directions:', error);
+    return null;
+  }
+}
+
 export async function getCountriesFromAddresses(
   startAddress: string,
   endAddress: string,

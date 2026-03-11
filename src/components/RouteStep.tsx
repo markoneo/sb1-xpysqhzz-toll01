@@ -36,8 +36,10 @@ interface RouteStepProps {
   tripType: 'one-way' | 'return';
   selectedSpecialTolls: SelectedSpecialToll[];
   directionsResult?: google.maps.DirectionsResult;
+  selectedRouteIndex: number;
   onChange: (field: string, value: string | string[] | 'one-way' | 'return' | SelectedSpecialToll[]) => void;
   onRoutePreviewCalculated?: (result: google.maps.DirectionsResult | null) => void;
+  onRouteSelected?: (index: number) => void;
 }
 
 export function RouteStep({
@@ -47,8 +49,10 @@ export function RouteStep({
   tripType,
   selectedSpecialTolls,
   directionsResult,
+  selectedRouteIndex,
   onChange,
-  onRoutePreviewCalculated
+  onRoutePreviewCalculated,
+  onRouteSelected
 }: RouteStepProps) {
   const [aiDetectedTunnelIds, setAiDetectedTunnelIds] = useState<string[]>([]);
   const [isDetectingTunnels, setIsDetectingTunnels] = useState(false);
@@ -190,7 +194,9 @@ export function RouteStep({
             startAddress={startAddress}
             endAddress={endAddress}
             waypointAddresses={waypointAddresses}
+            selectedRouteIndex={selectedRouteIndex}
             onRouteCalculated={handleRouteCalculated}
+            onRouteSelected={onRouteSelected}
           />
         </div>
       </div>
