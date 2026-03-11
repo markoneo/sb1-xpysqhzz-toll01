@@ -115,6 +115,11 @@ function HomePage() {
               totalDistance: routeData.totalDistance,
               totalDuration: routeData.totalDuration,
               directionsResult: routeData.directionsResult
+                ? {
+                    ...routeData.directionsResult,
+                    routes: [routeData.directionsResult.routes[previewRouteIndex] ?? routeData.directionsResult.routes[0]]
+                  }
+                : undefined
             }
           };
 
