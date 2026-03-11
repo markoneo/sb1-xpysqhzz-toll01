@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { ChevronRight, ChevronLeft, Calculator } from 'lucide-react';
 import { VehicleStep } from './components/VehicleStep';
@@ -48,6 +48,11 @@ function HomePage() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [previewDirectionsResult, setPreviewDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
   const [previewRouteIndex, setPreviewRouteIndex] = useState(0);
+
+  const handleRoutePreviewCalculated = useCallback((result: google.maps.DirectionsResult | null) => {
+    setPreviewDirectionsResult(result);
+    setPreviewRouteIndex(0);
+  }, []);
 
   const handleChange = (field: string, value: string | string[] | VehicleType | FuelType | number | 'one-way' | 'return' | SelectedSpecialToll[]) => {
     setTripData((prev) => {
@@ -247,10 +252,7 @@ function HomePage() {
                 directionsResult={previewDirectionsResult || undefined}
                 selectedRouteIndex={previewRouteIndex}
                 onChange={handleChange}
-                onRoutePreviewCalculated={(result) => {
-                  setPreviewDirectionsResult(result);
-                  setPreviewRouteIndex(0);
-                }}
+                onRoutePreviewCalculated={handleRoutePreviewCalculated}
                 onRouteSelected={setPreviewRouteIndex}
               />
             )}
