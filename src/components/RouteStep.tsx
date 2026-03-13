@@ -5,6 +5,7 @@ import { RoutePreviewMap } from './RoutePreviewMap';
 import { SpecialTollSelector } from './SpecialTollSelector';
 import { SelectedSpecialToll } from '../types';
 import { detectTunnelsWithAI } from '../services/tunnelDetectionService';
+import { detectTunnelsByProximity } from '../services/tunnelProximityService';
 
 const countryNameToCode: Record<string, string> = {
   'Austria': 'AT', 'Belgium': 'BE', 'Bulgaria': 'BG', 'Croatia': 'HR',
@@ -94,8 +95,16 @@ export function RouteStep({
     }
 
     const routeSummary = directionsResult?.routes[selectedRouteIndex]?.summary || '';
-    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}|${routeCountries.join(',')}|${routeSummary}`;
+    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}|${selectedRouteIndex}|${routeSummary}`;
     if (detectionKey === lastDetectionKey.current) {
+      return;
+    }
+    lastDetectionKey.current = detectionKey;
+
+    if (directionsResult) {
+      const tunnelIds = detectTunnelsByProximity(directionsResult, selectedRouteIndex);
+      setAiDetectedTunnelIds(tunnelIds);
+      setIsDetectingTunnels(false);
       return;
     }
 
@@ -109,7 +118,6 @@ export function RouteStep({
           countries: routeCountries,
           routeSummary,
         });
-        lastDetectionKey.current = detectionKey;
         setAiDetectedTunnelIds(tunnelIds);
       } catch (error) {
         console.error('AI tunnel detection failed:', error);
