@@ -170,6 +170,75 @@ function getHighwayDistanceInRange(segments: HighwaySegment[], startKm: number, 
   return highwayDistance;
 }
 
+async function enhanceRouteWithAI(
+  origin: string,
+  destination: string,
+  waypoints: string[],
+  routeSummary: string,
+  totalDistanceKm: number,
+  countryDistances: CountryDistance[]
+): Promise<CountryDistance[]> {
+  try {
+    const response = await fetch('/api/enhance-route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        origin,
+        destination,
+        waypoints: waypoints.filter(Boolean),
+        routeSummary,
+        totalDistanceKm,
+        countrySegments: countryDistances.map(cd => ({
+          countryCode: cd.countryCode,
+          distance: cd.distance,
+          highwayDistance: cd.highwayDistance
+        }))
+      })
+    });
+
+    if (!response.ok) return countryDistances;
+
+    const data = await response.json();
+    if (!Array.isArray(data.enhancedCountries) || data.enhancedCountries.length === 0) {
+      return countryDistances;
+    }
+
+    const aiCountries: Array<{ countryCode: string; distanceKm: number; highwayRatio: number }> = data.enhancedCountries;
+
+    const enhanced: CountryDistance[] = [];
+    const processedCodes = new Set<string>();
+
+    for (const ai of aiCountries) {
+      const { countryCode, distanceKm, highwayRatio } = ai;
+      if (!countryCode || typeof highwayRatio !== 'number') continue;
+      if (!countryRules[countryCode]) continue;
+      if (processedCodes.has(countryCode)) continue;
+      processedCodes.add(countryCode);
+
+      const existing = countryDistances.find(cd => cd.countryCode === countryCode);
+      const distance = existing ? existing.distance : Math.round((distanceKm || 0) * 10) / 10;
+      const ratio = Math.min(1, Math.max(0, highwayRatio));
+      const highwayDistance = Math.round(distance * ratio * 10) / 10;
+
+      enhanced.push({ countryCode, distance, highwayDistance });
+    }
+
+    for (const detected of countryDistances) {
+      if (!processedCodes.has(detected.countryCode)) {
+        enhanced.push(detected);
+      }
+    }
+
+    if (enhanced.length === 0) return countryDistances;
+
+    console.log('AI-enhanced country distances:', enhanced);
+    return enhanced;
+  } catch (error) {
+    console.error('AI route enhancement failed, using original data:', error);
+    return countryDistances;
+  }
+}
+
 export async function calculateRoute(
   startAddress: string,
   endAddress: string,
@@ -255,6 +324,20 @@ export async function calculateRoute(
               } catch (e) {
                 console.error('Fallback country detection failed:', e);
               }
+            }
+
+            try {
+              console.log('Running AI route enhancement...');
+              countryDistances = await enhanceRouteWithAI(
+                startAddress,
+                endAddress,
+                waypoints,
+                route.summary || '',
+                totalDistanceKm,
+                countryDistances
+              );
+            } catch (e) {
+              console.error('AI enhancement failed, keeping existing data:', e);
             }
 
             const countries = countryDistances.map(cd => cd.countryCode);
@@ -629,6 +712,26 @@ export async function calculateRouteFromDirections(
       } catch (e) {
         console.error('Fallback country detection failed:', e);
       }
+    }
+
+    try {
+      const firstLeg = route.legs[0];
+      const lastLeg = route.legs[route.legs.length - 1];
+      const routeOrigin = firstLeg?.start_address || '';
+      const routeDestination = lastLeg?.end_address || '';
+      const routeWaypoints = route.legs.slice(0, -1).map(leg => leg.end_address || '').filter(Boolean);
+
+      console.log('Running AI route enhancement (from directions)...');
+      countryDistances = await enhanceRouteWithAI(
+        routeOrigin,
+        routeDestination,
+        routeWaypoints,
+        route.summary || '',
+        totalDistanceKm,
+        countryDistances
+      );
+    } catch (e) {
+      console.error('AI enhancement failed, keeping existing data:', e);
     }
 
     const countries = countryDistances.map(cd => cd.countryCode);

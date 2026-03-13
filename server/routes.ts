@@ -129,6 +129,120 @@ If no tunnels are needed, respond with: []`;
     }
   });
 
+  app.post("/api/enhance-route", async (req, res) => {
+    try {
+      const { origin, destination, waypoints = [], routeSummary, totalDistanceKm, countrySegments } = req.body;
+
+      if (!origin || !destination || !Array.isArray(countrySegments)) {
+        return res.status(400).json({ enhancedCountries: null, error: "Missing required fields" });
+      }
+
+      const openaiApiKey = process.env.OPENAI_API_KEY;
+      if (!openaiApiKey) {
+        return res.json({ enhancedCountries: null, error: "OpenAI not configured" });
+      }
+
+      const detectedList = countrySegments.map((c: { countryCode: string; distance: number; highwayDistance: number }) =>
+        `  ${c.countryCode}: ${c.distance} km total, ${c.highwayDistance} km highway (detected by GPS sampling)`
+      ).join('\n');
+
+      const waypointsText = waypoints.length > 0 ? `Via: ${waypoints.join(', ')}\n` : '';
+
+      const prompt = `You are a European toll road expert with precise knowledge of motorway networks.
+
+A driver is traveling:
+From: ${origin}
+To: ${destination}
+${waypointsText}Route summary (main roads): ${routeSummary || 'standard route'}
+Total distance: ${Math.round(totalDistanceKm)} km
+
+My GPS route analyzer detected these countries:
+${detectedList}
+
+Your job has TWO parts:
+
+PART 1 - MISSING COUNTRIES:
+Check if any European countries are missing. GPS sampling sometimes misses countries that are briefly crossed (e.g. a corner of Switzerland, a short stretch of Liechtenstein, or a border-area crossing). Only add a country if you are highly confident it is actually on the standard driving route.
+
+PART 2 - HIGHWAY RATIOS:
+For each country (detected + any you add), provide the realistic fraction of distance driven on toll motorways / vignette-required roads. Use your knowledge:
+- Italy (IT): Autostrade are toll roads — typically 0.85–0.95 on routes between major cities
+- France (FR): Autoroutes are toll roads — typically 0.80–0.95 on major routes
+- Austria (AT): All motorways need vignette — typically 0.90–0.98 on through-routes
+- Switzerland (CH): All motorways need vignette — typically 0.90–0.98
+- Slovenia (SI): All motorways need vignette — typically 0.85–0.95
+- Croatia (HR): Motorways are tolled — typically 0.80–0.90
+- Spain (ES): Some motorways tolled — varies 0.30–0.70
+- Portugal (PT): Most motorways tolled — typically 0.70–0.90
+- Czech Republic (CZ), Slovakia (SK), Hungary (HU), Romania (RO), Bulgaria (BG): Vignette motorways — typically 0.75–0.90
+- Germany (DE): Autobahn, no car toll — use 0.80 for highway distance (relevant for trucks)
+- Poland (PL): Some toll sections — typically 0.50–0.70
+- Greece (GR): Egnatia and other motorways tolled — typically 0.70–0.85
+- Serbia (RS): Some toll sections — typically 0.60–0.80
+
+For countries where no toll/vignette applies to any road (e.g. short transit through a non-toll country), use 0.
+
+Respond with ONLY valid JSON, no explanation:
+{
+  "countries": [
+    {"countryCode": "DE", "distanceKm": 150, "highwayRatio": 0.85},
+    {"countryCode": "AT", "distanceKm": 80, "highwayRatio": 0.95}
+  ]
+}
+
+Rules:
+- Use ISO 3166-1 alpha-2 country codes
+- Keep distances for already-detected countries close to the GPS-detected values (adjust only if clearly wrong)
+- highwayRatio must be between 0.0 and 1.0
+- Total distanceKm values should approximately sum to ${Math.round(totalDistanceKm)} km
+- Only add countries you are certain about`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a European toll road expert. Respond only with valid JSON, no markdown or explanation." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.1,
+          max_tokens: 600,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("OpenAI API error:", await response.text());
+        return res.json({ enhancedCountries: null, error: "OpenAI API error" });
+      }
+
+      const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+      const content = data.choices?.[0]?.message?.content || "{}";
+
+      let enhancedCountries = null;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(parsed.countries)) {
+            enhancedCountries = parsed.countries;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse OpenAI enhance-route response:", content, e);
+      }
+
+      return res.json({ enhancedCountries });
+
+    } catch (error) {
+      console.error("Error in enhance-route:", error);
+      return res.json({ enhancedCountries: null, error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
