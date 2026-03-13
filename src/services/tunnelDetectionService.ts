@@ -3,6 +3,7 @@ interface TunnelDetectionRequest {
   destination: string;
   waypoints?: string[];
   countries?: string[];
+  routeSummary?: string;
 }
 
 interface TunnelDetectionResponse {

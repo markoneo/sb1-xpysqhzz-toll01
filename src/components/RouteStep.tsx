@@ -93,7 +93,8 @@ export function RouteStep({
       return;
     }
 
-    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}|${routeCountries.join(',')}`;
+    const routeSummary = directionsResult?.routes[selectedRouteIndex]?.summary || '';
+    const detectionKey = `${startAddress}|${endAddress}|${waypointAddresses.join('|')}|${routeCountries.join(',')}|${routeSummary}`;
     if (detectionKey === lastDetectionKey.current) {
       return;
     }
@@ -106,6 +107,7 @@ export function RouteStep({
           destination: endAddress,
           waypoints: waypointAddresses.filter(Boolean),
           countries: routeCountries,
+          routeSummary,
         });
         lastDetectionKey.current = detectionKey;
         setAiDetectedTunnelIds(tunnelIds);
@@ -118,7 +120,7 @@ export function RouteStep({
 
     const timeoutId = setTimeout(detectTunnels, 1000);
     return () => clearTimeout(timeoutId);
-  }, [startAddress, endAddress, waypointAddresses, routeCountries]);
+  }, [startAddress, endAddress, waypointAddresses, routeCountries, selectedRouteIndex, directionsResult]);
 
   const addWaypoint = () => {
     onChange('waypointAddresses', [...waypointAddresses, '']);

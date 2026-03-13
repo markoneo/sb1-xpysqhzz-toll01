@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/detect-tunnels", async (req, res) => {
     try {
-      const { origin, destination, waypoints = [], countries = [] }: TunnelDetectionRequest = req.body;
+      const { origin, destination, waypoints = [], countries = [], routeSummary = '' }: TunnelDetectionRequest & { routeSummary?: string } = req.body;
 
       if (!origin || !destination) {
         return res.status(400).json({ error: "Origin and destination are required" });
@@ -59,26 +59,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ).join('\n');
 
       const waypointsText = waypoints.length > 0 ? `Via: ${waypoints.join(', ')}` : '';
+      const routeSummaryLine = routeSummary ? `Specific roads used by this route: ${routeSummary}` : '';
 
       const prompt = `You are a European toll road expert. A driver is traveling:
 From: ${origin}
 To: ${destination}
 ${waypointsText}
 Countries on route: ${countries.join(', ') || 'Unknown'}
+${routeSummaryLine}
 
-Based on the standard driving routes between these locations, which tunnels from this list would they DEFINITELY pass through?
+Which tunnels from the list below would they pass through on THIS SPECIFIC ROUTE?
 
 Available tunnels:
 ${tunnelList}
 
-IMPORTANT RULES:
-1. Only include tunnels that are on the MAIN/DEFAULT driving route (what Google Maps or navigation would suggest)
-2. For Salzburg to Ljubljana via A10: Tauern Tunnel (at-tauern) AND Karawanken Tunnel (at-karawanken) are BOTH required
-3. For Ljubljana to Salzburg via A10: Karawanken Tunnel (at-karawanken) AND Tauern Tunnel (at-tauern) are BOTH required
-4. The A10 Tauern Autobahn goes: Salzburg -> Tauern Tunnel -> Villach -> Karawanken Tunnel -> Slovenia
-5. If traveling through Graz instead (A9 route), use Bosruck and Gleinalm tunnels, NOT Tauern/Karawanken
+ROAD-TO-TUNNEL MAPPING RULES (apply these based on the specific roads listed above):
+- Route uses A13 in Austria → INCLUDE at-brenner (A13 IS the Brenner Autobahn, Innsbruck to Italy)
+- Route uses A10 in Austria → INCLUDE at-tauern (A10 goes through Tauern Tunnel, Salzburg to Villach)
+- Route uses A10 AND destination/waypoint is Slovenia or Croatia → ALSO INCLUDE at-karawanken
+- Route uses A11 in Austria → INCLUDE at-karawanken (Villach to Slovenia)
+- Route uses S16 in Austria → INCLUDE at-arlberg (Tirol to Vorarlberg)
+- Route uses A9 in Austria between Linz and Graz → INCLUDE at-bosruck AND at-gleinalm
 
-Respond with ONLY a JSON array of tunnel IDs, like: ["at-tauern", "at-karawanken"]
+MUTUALLY EXCLUSIVE — pick only one Austria crossing type:
+- A13/Brenner route (Innsbruck area): at-brenner ONLY — do NOT add at-tauern or at-karawanken
+- A10/Tauern route (Salzburg/Villach area): at-tauern (+at-karawanken if to Slovenia) — do NOT add at-brenner
+- A9 route (Graz area): at-bosruck + at-gleinalm — do NOT add at-tauern or at-brenner
+
+If routeSummary is empty or unclear, use origin/destination geography to make your best determination.
+
+Respond with ONLY a JSON array of tunnel IDs, like: ["at-brenner"]
 If no tunnels are needed, respond with: []`;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
