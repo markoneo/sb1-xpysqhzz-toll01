@@ -205,22 +205,22 @@ async function enhanceRouteWithAI(
 
     const aiCountries: Array<{ countryCode: string; distanceKm: number; highwayRatio: number }> = data.enhancedCountries;
 
+    const detectedCodes = new Set(countryDistances.map(cd => cd.countryCode));
     const enhanced: CountryDistance[] = [];
     const processedCodes = new Set<string>();
 
     for (const ai of aiCountries) {
-      const { countryCode, distanceKm, highwayRatio } = ai;
+      const { countryCode, highwayRatio } = ai;
       if (!countryCode || typeof highwayRatio !== 'number') continue;
-      if (!countryRules[countryCode]) continue;
+      if (!detectedCodes.has(countryCode)) continue;
       if (processedCodes.has(countryCode)) continue;
       processedCodes.add(countryCode);
 
-      const existing = countryDistances.find(cd => cd.countryCode === countryCode);
-      const distance = existing ? existing.distance : Math.round((distanceKm || 0) * 10) / 10;
+      const existing = countryDistances.find(cd => cd.countryCode === countryCode)!;
       const ratio = Math.min(1, Math.max(0, highwayRatio));
-      const highwayDistance = Math.round(distance * ratio * 10) / 10;
+      const highwayDistance = Math.round(existing.distance * ratio * 10) / 10;
 
-      enhanced.push({ countryCode, distance, highwayDistance });
+      enhanced.push({ countryCode, distance: existing.distance, highwayDistance });
     }
 
     for (const detected of countryDistances) {

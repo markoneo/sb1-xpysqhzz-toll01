@@ -156,16 +156,11 @@ To: ${destination}
 ${waypointsText}Route summary (main roads): ${routeSummary || 'standard route'}
 Total distance: ${Math.round(totalDistanceKm)} km
 
-My GPS route analyzer detected these countries:
+My GPS route analyzer confirmed these countries are on the route:
 ${detectedList}
 
-Your job has TWO parts:
-
-PART 1 - MISSING COUNTRIES:
-Check if any European countries are missing. GPS sampling sometimes misses countries that are briefly crossed (e.g. a corner of Switzerland, a short stretch of Liechtenstein, or a border-area crossing). Only add a country if you are highly confident it is actually on the standard driving route.
-
-PART 2 - HIGHWAY RATIOS:
-For each country (detected + any you add), provide the realistic fraction of distance driven on toll motorways / vignette-required roads. Use your knowledge:
+YOUR TASK - HIGHWAY RATIOS ONLY:
+For each of the GPS-confirmed countries above, estimate the realistic fraction of distance driven on toll motorways / vignette-required roads. Use your knowledge of the actual roads used on this specific route:
 - Italy (IT): Autostrade are toll roads — typically 0.85–0.95 on routes between major cities
 - France (FR): Autoroutes are toll roads — typically 0.80–0.95 on major routes
 - Austria (AT): All motorways need vignette — typically 0.90–0.98 on through-routes
@@ -180,22 +175,19 @@ For each country (detected + any you add), provide the realistic fraction of dis
 - Greece (GR): Egnatia and other motorways tolled — typically 0.70–0.85
 - Serbia (RS): Some toll sections — typically 0.60–0.80
 
-For countries where no toll/vignette applies to any road (e.g. short transit through a non-toll country), use 0.
+CRITICAL RULES:
+- Return ONLY the countries listed above — do NOT add any new countries
+- Do NOT invent or guess additional countries even if you think the route might pass through them
+- The GPS detection is authoritative for which countries are crossed
+- highwayRatio must be between 0.0 and 1.0
 
 Respond with ONLY valid JSON, no explanation:
 {
   "countries": [
-    {"countryCode": "DE", "distanceKm": 150, "highwayRatio": 0.85},
-    {"countryCode": "AT", "distanceKm": 80, "highwayRatio": 0.95}
+    {"countryCode": "SI", "distanceKm": 97, "highwayRatio": 0.90},
+    {"countryCode": "IT", "distanceKm": 407, "highwayRatio": 0.88}
   ]
-}
-
-Rules:
-- Use ISO 3166-1 alpha-2 country codes
-- Keep distances for already-detected countries close to the GPS-detected values (adjust only if clearly wrong)
-- highwayRatio must be between 0.0 and 1.0
-- Total distanceKm values should approximately sum to ${Math.round(totalDistanceKm)} km
-- Only add countries you are certain about`;
+}`;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
