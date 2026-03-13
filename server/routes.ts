@@ -235,6 +235,88 @@ Respond with ONLY valid JSON, no explanation:
     }
   });
 
+  app.post("/api/route-summary", async (req, res) => {
+    try {
+      const { origin, destination, waypoints = [], routeSummary, totalDistanceKm, countries, specialTolls = [], tripType } = req.body;
+
+      if (!origin || !destination || !Array.isArray(countries)) {
+        return res.status(400).json({ summary: null, error: "Missing required fields" });
+      }
+
+      const openaiApiKey = process.env.OPENAI_API_KEY;
+      if (!openaiApiKey) {
+        return res.json({ summary: null, error: "OpenAI not configured" });
+      }
+
+      const countryLines = countries.map((c: { countryName: string; distance: number; tollSystem: string; vignetteCost: number; tollCost: number }) => {
+        const parts: string[] = [`${c.countryName} (${Math.round(c.distance)} km)`];
+        if (c.tollSystem === 'vignette' || c.tollSystem === 'mixed') parts.push('needs vignette');
+        if (c.tollSystem === 'distance' || c.tollSystem === 'mixed') parts.push('distance-based motorway toll');
+        if (c.tollSystem === 'none') parts.push('no motorway toll for cars');
+        return `- ${parts.join(', ')}`;
+      }).join('\n');
+
+      const specialTollLines = specialTolls.length > 0
+        ? `Special tolls (tunnels/bridges): ${specialTolls.join(', ')}`
+        : '';
+
+      const waypointsText = waypoints.length > 0 ? `Via: ${waypoints.join(' → ')}\n` : '';
+      const tripTypeText = tripType === 'return' ? 'round trip' : 'one-way';
+
+      const prompt = `Write a 2-3 sentence plain English summary for a driver about their upcoming European road trip. Be specific about the roads and motorways they will use. Mention the key toll/vignette requirements they need to prepare.
+
+Trip details:
+From: ${origin}
+To: ${destination}
+${waypointsText}Main roads: ${routeSummary || 'standard motorway route'}
+Total distance: ${Math.round(totalDistanceKm)} km (${tripTypeText})
+
+Countries and requirements:
+${countryLines}
+${specialTollLines}
+
+Instructions:
+- Start with "Your route..." 
+- Mention the specific road names (e.g. A10, A22, Autostrade) if known from the route summary
+- In the next sentence, list what the driver needs to pay or buy (vignettes, tolls, tunnel fees)
+- Be concise and practical — this is a pre-trip checklist summary
+- Do not invent road names you are not sure about; just say "via motorway" if unsure
+- Write in second person ("you", "your")
+- Plain text only, no markdown`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a helpful European road trip assistant. Write concise, accurate summaries." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.4,
+          max_tokens: 200,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("OpenAI API error:", await response.text());
+        return res.json({ summary: null, error: "OpenAI API error" });
+      }
+
+      const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+      const summary = data.choices?.[0]?.message?.content?.trim() || null;
+
+      return res.json({ summary });
+
+    } catch (error) {
+      console.error("Error in route-summary:", error);
+      return res.json({ summary: null, error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

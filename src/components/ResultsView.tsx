@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Euro, Route, Clock, Info, ArrowLeft, MapPin, Share2, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Euro, Route, Clock, Info, ArrowLeft, MapPin, Share2, Check, Sparkles } from 'lucide-react';
 import { CalculationResult, TripData } from '../types';
 import { RouteMap } from './RouteMap';
+import { countryRules } from '../data/countryRules';
 
 interface ResultsViewProps {
   result: CalculationResult;
@@ -12,6 +13,53 @@ interface ResultsViewProps {
 export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
   const isReturnTrip = tripData.tripType === 'return';
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'shared'>('idle');
+  const [routeSummaryText, setRouteSummaryText] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const directionsResult = tripData.routeData?.directionsResult;
+        const googleRouteSummary = directionsResult?.routes?.[0]?.summary || '';
+
+        const countriesPayload = result.countryCosts.map(c => ({
+          countryName: c.countryName,
+          distance: c.estimatedDistance,
+          tollSystem: countryRules[c.countryCode]?.tollSystem || 'none',
+          vignetteCost: c.vignetteCost,
+          tollCost: c.tollCost,
+        }));
+
+        const specialTollNames = (tripData.selectedSpecialTolls || []).map(t => t.name);
+
+        const response = await fetch('/api/route-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origin: tripData.startAddress,
+            destination: tripData.endAddress,
+            waypoints: tripData.waypointAddresses || [],
+            routeSummary: googleRouteSummary,
+            totalDistanceKm: result.totalDistance,
+            countries: countriesPayload,
+            specialTolls: specialTollNames,
+            tripType: tripData.tripType,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.summary) setRouteSummaryText(data.summary);
+        }
+      } catch (e) {
+        console.error('Route summary fetch failed:', e);
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, []);
 
   const generateShareText = () => {
     const tripType = isReturnTrip ? 'Round trip' : 'One-way';
@@ -172,6 +220,26 @@ export function ResultsView({ result, tripData, onBack }: ResultsViewProps) {
           <div className="text-lg sm:text-3xl font-bold text-gray-900" data-testid="text-countries-count">{result.countryCosts.length}</div>
         </div>
       </div>
+
+      {(summaryLoading || routeSummaryText) && (
+        <div className="p-4 sm:p-5 rounded-xl border-2 border-blue-100 bg-blue-50" data-testid="panel-route-summary">
+          <div className="flex items-center gap-2 mb-2 text-blue-700">
+            <Sparkles className="w-4 h-4 flex-shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wide">Route Overview</span>
+          </div>
+          {summaryLoading ? (
+            <div className="space-y-2 animate-pulse">
+              <div className="h-3.5 bg-blue-200 rounded w-full" />
+              <div className="h-3.5 bg-blue-200 rounded w-5/6" />
+              <div className="h-3.5 bg-blue-200 rounded w-4/6" />
+            </div>
+          ) : (
+            <p className="text-sm sm:text-base text-blue-900 leading-relaxed" data-testid="text-route-summary">
+              {routeSummaryText}
+            </p>
+          )}
+        </div>
+      )}
 
       <div>
         <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Your Route</h3>
