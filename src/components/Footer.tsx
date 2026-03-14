@@ -15,6 +15,11 @@ export function Footer() {
             <h4 className="text-white font-medium mb-3 text-sm">Calculator</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/" className="hover:text-white transition-colors" data-testid="link-footer-home">Toll Calculator</Link></li>
+              <li><Link href="/guides" className="hover:text-white transition-colors" data-testid="link-footer-guides">Country Guides</Link></li>
+              <li><Link href="/guide/austria" className="hover:text-white transition-colors" data-testid="link-footer-austria">Austria Guide</Link></li>
+              <li><Link href="/guide/italy" className="hover:text-white transition-colors" data-testid="link-footer-italy">Italy Guide</Link></li>
+              <li><Link href="/guide/france" className="hover:text-white transition-colors" data-testid="link-footer-france">France Guide</Link></li>
+              <li><Link href="/guide/switzerland" className="hover:text-white transition-colors" data-testid="link-footer-switzerland">Switzerland Guide</Link></li>
             </ul>
           </div>
           <div>

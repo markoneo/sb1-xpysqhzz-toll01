@@ -16,6 +16,15 @@ import { CookiePolicy } from './pages/CookiePolicy';
 import { TermsConditions } from './pages/TermsConditions';
 import { AboutUs } from './pages/AboutUs';
 import { Contact } from './pages/Contact';
+import { CountryGuides } from './pages/CountryGuides';
+import { GuideAustria } from './pages/guides/Austria';
+import { GuideSwitzerland } from './pages/guides/Switzerland';
+import { GuideItaly } from './pages/guides/Italy';
+import { GuideFrance } from './pages/guides/France';
+import { GuideGermany } from './pages/guides/Germany';
+import { GuideCroatia } from './pages/guides/Croatia';
+import { GuideSlovenia } from './pages/guides/Slovenia';
+import { GuideSpain } from './pages/guides/Spain';
 
 type Step = 'vehicle' | 'route' | 'dates' | 'results';
 
@@ -338,6 +347,15 @@ function App() {
         <Route path="/terms" component={TermsConditions} />
         <Route path="/about" component={AboutUs} />
         <Route path="/contact" component={Contact} />
+        <Route path="/guides" component={CountryGuides} />
+        <Route path="/guide/austria" component={GuideAustria} />
+        <Route path="/guide/switzerland" component={GuideSwitzerland} />
+        <Route path="/guide/italy" component={GuideItaly} />
+        <Route path="/guide/france" component={GuideFrance} />
+        <Route path="/guide/germany" component={GuideGermany} />
+        <Route path="/guide/croatia" component={GuideCroatia} />
+        <Route path="/guide/slovenia" component={GuideSlovenia} />
+        <Route path="/guide/spain" component={GuideSpain} />
         <Route component={HomePage} />
       </Switch>
     </>
