@@ -1,11 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const AVAILABLE_TUNNELS = [
   { id: 'at-brenner', name: 'Brenner Autobahn (A13)', country: 'Austria', route: 'Innsbruck to Italy border' },
@@ -32,15 +26,29 @@ interface TunnelDetectionRequest {
   countries?: string[];
 }
 
+const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://tollcalculator.eu/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://tollcalculator.eu/guides</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/austria</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/switzerland</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/italy</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/france</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/germany</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/croatia</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/slovenia</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/guide/spain</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tollcalculator.eu/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://tollcalculator.eu/contact</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://tollcalculator.eu/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://tollcalculator.eu/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://tollcalculator.eu/cookies</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+</urlset>`;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/sitemap.xml", (_req, res) => {
-    const sitemapPath = path.resolve(__dirname, "../public/sitemap.xml");
-    if (fs.existsSync(sitemapPath)) {
-      res.setHeader("Content-Type", "application/xml; charset=utf-8");
-      res.sendFile(sitemapPath);
-    } else {
-      res.status(404).send("Not found");
-    }
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.send(SITEMAP_XML);
   });
 
   app.get("/api/config", (_req, res) => {
