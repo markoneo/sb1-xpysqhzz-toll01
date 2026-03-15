@@ -1,5 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AVAILABLE_TUNNELS = [
   { id: 'at-brenner', name: 'Brenner Autobahn (A13)', country: 'Austria', route: 'Innsbruck to Italy border' },
@@ -27,6 +33,16 @@ interface TunnelDetectionRequest {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/sitemap.xml", (_req, res) => {
+    const sitemapPath = path.resolve(__dirname, "../public/sitemap.xml");
+    if (fs.existsSync(sitemapPath)) {
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      res.sendFile(sitemapPath);
+    } else {
+      res.status(404).send("Not found");
+    }
+  });
+
   app.get("/api/config", (_req, res) => {
     return res.json({
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
